@@ -83,7 +83,7 @@ public class JGitFileSystemProvider implements FileSystemProvider {
     public static final  String GIT_DEFAULT_REMOTE_NAME = DEFAULT_REMOTE_NAME;
     private static final String SCHEME                  = "git";
 
-    public static final String REPOSITORIES_ROOT_DIR = ".vfsgit";
+    public static final String REPOSITORIES_ROOT_DIR = ".niogit";
     public static File FILE_REPOSITORIES_ROOT;
 
     public static final String USER_NAME = "username";
@@ -103,7 +103,7 @@ public class JGitFileSystemProvider implements FileSystemProvider {
     }
 
     public static void loadConfig() {
-        final String value = System.getProperty( "org.uberfire.vfs.git.dir" );
+        final String value = System.getProperty( "org.kie.nio.git.dir" );
         if ( value == null || value.trim().isEmpty() ) {
             FILE_REPOSITORIES_ROOT = new File( REPOSITORIES_ROOT_DIR );
         } else {

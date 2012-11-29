@@ -69,7 +69,7 @@ public class NewProviderDefineDirTest {
     public void testUsingProvidedPath() throws IOException {
 
         final File dir = createTempDirectory();
-        System.setProperty("org.uberfire.vfs.git.dir", dir.toString());
+        System.setProperty("org.kie.nio.git.dir", dir.toString());
         JGitFileSystemProvider.loadConfig();
 
         final JGitFileSystemProvider provider = new JGitFileSystemProvider();
@@ -80,13 +80,13 @@ public class NewProviderDefineDirTest {
 
         final String[] names = dir.list();
 
-        assertThat(names).isNotEmpty().contains(".vfsgit");
+        assertThat(names).isNotEmpty().contains(".niogit");
 
-        final String[] repos = new File(dir, ".vfsgit").list();
+        final String[] repos = new File(dir, ".niogit").list();
 
         assertThat(repos).isNotEmpty().contains("repo-name.git");
 
-        System.setProperty("org.uberfire.vfs.git.dir", "");
+        System.setProperty("org.kie.nio.git.dir", "");
 
     }
 
