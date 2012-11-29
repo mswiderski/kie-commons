@@ -219,7 +219,7 @@ public class JGitFileSystemProvider implements FileSystemProvider {
         final JGitFileSystem fileSystem = fileSystems.get( extractRepoName( uri ) );
 
         if ( fileSystem == null ) {
-            throw new FileSystemNotFoundException();
+            throw new FileSystemNotFoundException("No filesystem for uri (" + uri + ") found.");
         }
 
         if ( hasFetchFlag( uri ) ) {
