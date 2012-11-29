@@ -24,10 +24,10 @@
     <version>9</version>
   </parent>
 
-  <groupId>org.kie</groupId>
+  <groupId>org.kie.commons</groupId>
   <artifactId>kie-commons</artifactId>
   <version>0.1.0-SNAPSHOT</version>
-  <packaging>jar</packaging>
+  <packaging>pom</packaging>
 
   <name>Kie Commons</name>
   <description>
@@ -45,6 +45,17 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
+
+  <properties>
+    <slf4j.version>1.6.6</slf4j.version>
+    <logback.version>1.0.7</logback.version>
+  </properties>
+
+  <modules>
+    <module>kie-commons-data</module>
+    <module>kie-commons-validation</module>
+    <module>kie-nio2-backport</module>
+  </modules>
 
   <build>
     <pluginManagement>
@@ -212,6 +223,82 @@
 
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>org.kie.commons</groupId>
+        <artifactId>kie-commons-data</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.commons</groupId>
+        <artifactId>kie-commons-validation</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.kie.commons</groupId>
+        <artifactId>kie-nio2-model</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.kie.commons</groupId>
+        <artifactId>kie-nio2-api</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.kie.commons</groupId>
+        <artifactId>kie-nio2-fs</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.kie.commons</groupId>
+        <artifactId>kie-nio2-jgit</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <!-- VFS: Simple FileSystem -->
+      <dependency>
+        <groupId>commons-httpclient</groupId>
+        <artifactId>commons-httpclient</artifactId>
+        <version>3.1</version>
+      </dependency>
+
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>1.4</version>
+      </dependency>
+
+      <!-- VFS: jGIT -->
+      <dependency>
+        <groupId>org.eclipse.jgit</groupId>
+        <artifactId>org.eclipse.jgit</artifactId>
+        <version>2.1.0.201209190230-r</version>
+      </dependency>
+
+      <!-- Runtime / Container dependencies -->
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-core</artifactId>
+        <version>${logback.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>${logback.version}</version>
+      </dependency>
+
+
+      <!-- Testing dependencies -->
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
