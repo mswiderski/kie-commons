@@ -103,12 +103,6 @@ public interface IOService {
     DirectoryStream<Path> newDirectoryStream( final Path dir )
             throws IllegalArgumentException, NotDirectoryException, IOException, SecurityException;
 
-    //TODO: needs implement a glob parser
-//    DS newDirectoryStream( final Path dir,
-//                           final String glob )
-//            throws IllegalArgumentException, UnsupportedOperationException, PatternSyntaxException,
-//            NotDirectoryException, IOException, SecurityException;
-
     DirectoryStream<Path> newDirectoryStream( final Path dir,
                                               final DirectoryStream.Filter<Path> filter )
             throws IllegalArgumentException, NotDirectoryException, IOException, SecurityException;
@@ -225,10 +219,6 @@ public interface IOService {
     FileTime getLastModifiedTime( final Path path )
             throws IllegalArgumentException, IOException, SecurityException;
 
-    Path setLastModifiedTime( final Path path,
-                              final FileTime time )
-            throws IOException, SecurityException;
-
     long size( final Path path )
             throws IllegalArgumentException, IOException, SecurityException;
 
@@ -284,6 +274,18 @@ public interface IOService {
             throws IOException, UnsupportedOperationException, SecurityException;
 
     Path write( final Path path,
+                final byte[] bytes,
+                final Map<String, ?> attrs,
+                final OpenOption... options )
+            throws IOException, UnsupportedOperationException, SecurityException;
+
+    Path write( final Path path,
+                final byte[] bytes,
+                final Set<? extends OpenOption> options,
+                final FileAttribute<?>... attrs )
+            throws IllegalArgumentException, IOException, UnsupportedOperationException;
+
+    Path write( final Path path,
                 final Iterable<? extends CharSequence> lines,
                 final Charset cs,
                 final OpenOption... options )
@@ -325,4 +327,5 @@ public interface IOService {
                 final Map<String, ?> attrs,
                 final OpenOption... options )
             throws IllegalArgumentException, IOException, UnsupportedOperationException;
+
 }

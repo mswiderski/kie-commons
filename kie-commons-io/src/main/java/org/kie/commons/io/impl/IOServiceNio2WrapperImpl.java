@@ -16,10 +16,7 @@
 
 package org.kie.commons.io.impl;
 
-import java.io.BufferedWriter;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Set;
 
@@ -37,7 +34,6 @@ import org.kie.commons.java.nio.file.Path;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
 import org.kie.commons.java.nio.file.attribute.FileAttribute;
 import org.kie.commons.java.nio.file.attribute.FileAttributeView;
-import org.kie.commons.java.nio.file.attribute.FileTime;
 
 public class IOServiceNio2WrapperImpl
         extends AbstractIOService
@@ -86,38 +82,6 @@ public class IOServiceNio2WrapperImpl
             throws UnsupportedOperationException, FileAlreadyExistsException,
             IOException, SecurityException {
         return Files.createDirectories( dir, attrs );
-    }
-
-    @Override
-    public Path createTempFile( final String prefix,
-                                final String suffix,
-                                final FileAttribute<?>... attrs )
-            throws IllegalArgumentException, UnsupportedOperationException, IOException, SecurityException {
-        return Files.createTempFile( prefix, suffix, attrs );
-    }
-
-    @Override
-    public Path createTempFile( final Path dir,
-                                final String prefix,
-                                final String suffix,
-                                final FileAttribute<?>... attrs )
-            throws IllegalArgumentException, UnsupportedOperationException, IOException, SecurityException {
-        return Files.createTempFile( dir, prefix, suffix, attrs );
-    }
-
-    @Override
-    public Path createTempDirectory( final String prefix,
-                                     final FileAttribute<?>... attrs )
-            throws IllegalArgumentException, UnsupportedOperationException, IOException, SecurityException {
-        return Files.createTempDirectory( prefix, attrs );
-    }
-
-    @Override
-    public Path createTempDirectory( final Path dir,
-                                     final String prefix,
-                                     final FileAttribute<?>... attrs )
-            throws IllegalArgumentException, UnsupportedOperationException, IOException, SecurityException {
-        return Files.createTempDirectory( dir, prefix, attrs );
     }
 
     @Override
@@ -189,69 +153,14 @@ public class IOServiceNio2WrapperImpl
     }
 
     @Override
-    public FileTime getLastModifiedTime( final Path path )
-            throws IllegalArgumentException, IOException, SecurityException {
-        return Files.getLastModifiedTime( path );
-    }
-
-    @Override
-    public Path setLastModifiedTime( final Path path,
-                                     final FileTime time )
-            throws IOException, SecurityException {
-        return Files.setLastModifiedTime( path, time );
-    }
-
-    @Override
-    public BufferedWriter newBufferedWriter( final Path path,
-                                             final Charset cs,
-                                             final OpenOption... options )
-            throws IllegalArgumentException, IOException, UnsupportedOperationException, SecurityException {
-        return Files.newBufferedWriter( path, cs, options );
-    }
-
-    @Override
-    public long copy( final InputStream in,
-                      final Path target,
-                      final CopyOption... options )
-            throws IOException, FileAlreadyExistsException, DirectoryNotEmptyException, UnsupportedOperationException, SecurityException {
-        return Files.copy( in, target, options );
-    }
-
-    @Override
     public Path write( final Path path,
                        final byte[] bytes,
-                       final OpenOption... options )
-            throws IOException, UnsupportedOperationException, SecurityException {
-        return Files.write( path, bytes, options );
-    }
-
-    @Override
-    public Path write( final Path path,
-                       final Iterable<? extends CharSequence> lines,
-                       final Charset cs,
-                       final OpenOption... options ) throws IllegalArgumentException, IOException, UnsupportedOperationException, SecurityException {
-        return Files.write( path, lines, cs, options );
-    }
-
-    @Override
-    public Path write( final Path path,
-                       final String content,
-                       final Charset cs,
-                       final OpenOption... options )
-            throws IllegalArgumentException, IOException, UnsupportedOperationException {
-        return Files.write( path, content.getBytes( cs ), options );
-    }
-
-    @Override
-    public Path write( final Path path,
-                       final String content,
-                       final Charset cs,
                        final Set<? extends OpenOption> options,
-                       final FileAttribute<?>... attrs )
-            throws IllegalArgumentException, IOException, UnsupportedOperationException {
+                       final FileAttribute<?>... attrs ) throws IllegalArgumentException, IOException, UnsupportedOperationException {
         final SeekableByteChannel byteChannel = Files.newByteChannel( path, options, attrs );
+
         try {
-            byteChannel.write( ByteBuffer.wrap( content.getBytes( cs ) ) );
+            byteChannel.write( ByteBuffer.wrap( bytes ) );
             byteChannel.close();
         } catch ( final java.io.IOException e ) {
             throw new IOException( e );

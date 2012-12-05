@@ -14,10 +14,28 @@
  * limitations under the License.
  */
 
-package org.kie.commons.io.options;
+package org.kie.commons.nio.dotfiles;
 
-import org.kie.commons.java.nio.file.OpenOption;
+import java.util.Map;
+import java.util.Properties;
 
-public class DotFileOption implements OpenOption {
+import org.kie.commons.java.nio.file.attribute.FileAttribute;
+
+/**
+ *
+ */
+public final class PropertiesBuilder {
+
+    public static final Properties build( final Map<String, Object> attrs ) {
+        return null;
+    }
+
+    public static final Properties build( final FileAttribute<?>... attrs ) {
+        return null;
+    }
+
+    public static final Map<String, Object> load( final Properties content ) {
+        return null;
+    }
 
 }

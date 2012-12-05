@@ -16,11 +16,11 @@
 
 package org.kie.commons.io.impl;
 
-import java.io.BufferedWriter;
-import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import org.kie.commons.io.IOService;
@@ -37,111 +37,119 @@ import org.kie.commons.java.nio.file.Path;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
 import org.kie.commons.java.nio.file.attribute.FileAttribute;
 import org.kie.commons.java.nio.file.attribute.FileAttributeView;
-import org.kie.commons.java.nio.file.attribute.FileTime;
+import org.kie.commons.nio.dotfiles.PropertiesBuilder;
+import org.kie.commons.nio.dotfiles.options.DotFileOption;
+
+import static org.kie.commons.java.nio.file.StandardCopyOption.*;
 
 public class IOServiceDotFileImpl
         extends AbstractIOService
         implements IOService {
 
     @Override
-    public void delete( final Path path )
+    public synchronized void delete( final Path path )
             throws IllegalArgumentException, NoSuchFileException, DirectoryNotEmptyException,
             IOException, SecurityException {
         Files.delete( path );
+        Files.delete( dot( path ) );
     }
 
     @Override
-    public boolean deleteIfExists( final Path path )
+    public synchronized boolean deleteIfExists( final Path path )
             throws IllegalArgumentException, DirectoryNotEmptyException, IOException, SecurityException {
-        return Files.deleteIfExists( path );
+        final boolean result = Files.deleteIfExists( path );
+        Files.delete( dot( path ) );
+        return result;
     }
 
     @Override
-    public SeekableByteChannel newByteChannel( final Path path,
-                                               final Set<? extends OpenOption> options,
-                                               final FileAttribute<?>... attrs )
-            throws IllegalArgumentException, UnsupportedOperationException, FileAlreadyExistsException, IOException, SecurityException {
-        return Files.newByteChannel( path, options, attrs );
+    public synchronized SeekableByteChannel newByteChannel( final Path path,
+                                                            final Set<? extends OpenOption> options,
+                                                            final FileAttribute<?>... attrs )
+            throws IllegalArgumentException, UnsupportedOperationException,
+            FileAlreadyExistsException, IOException, SecurityException {
+        final SeekableByteChannel result = Files.newByteChannel( path, buildOptions( options ), attrs );
+
+        if ( isFileScheme( path ) ) {
+            buildDotFile( path, attrs );
+        }
+
+        return result;
     }
 
     @Override
-    public Path createFile( final Path path,
-                            final FileAttribute<?>... attrs )
+    public synchronized Path createFile( final Path path,
+                                         final FileAttribute<?>... attrs )
             throws IllegalArgumentException, UnsupportedOperationException, FileAlreadyExistsException,
             IOException, SecurityException {
-        return Files.createFile( path, attrs );
+        final Path result = Files.createFile( path, attrs );
+
+        if ( isFileScheme( path ) ) {
+            buildDotFile( path, attrs );
+        }
+
+        return result;
     }
 
     @Override
-    public Path createDirectory( final Path dir,
-                                 final FileAttribute<?>... attrs )
+    public synchronized Path createDirectory( final Path dir,
+                                              final FileAttribute<?>... attrs )
             throws IllegalArgumentException, UnsupportedOperationException, FileAlreadyExistsException,
             IOException, SecurityException {
-        return Files.createDirectory( dir, attrs );
+        final Path result = Files.createDirectory( dir, attrs );
+
+        buildDotFile( dir, attrs );
+
+        return result;
     }
 
     @Override
-    public Path createDirectories( final Path dir,
-                                   final FileAttribute<?>... attrs )
+    public synchronized Path createDirectories( final Path dir,
+                                                final FileAttribute<?>... attrs )
             throws UnsupportedOperationException, FileAlreadyExistsException,
             IOException, SecurityException {
-        return Files.createDirectories( dir, attrs );
+        final Path result = Files.createDirectories( dir, attrs );
+
+        buildDotFile( dir, attrs );
+
+        return result;
     }
 
     @Override
-    public Path createTempFile( final String prefix,
-                                final String suffix,
-                                final FileAttribute<?>... attrs )
-            throws IllegalArgumentException, UnsupportedOperationException, IOException, SecurityException {
-        return Files.createTempFile( prefix, suffix, attrs );
-    }
-
-    @Override
-    public Path createTempFile( final Path dir,
-                                final String prefix,
-                                final String suffix,
-                                final FileAttribute<?>... attrs )
-            throws IllegalArgumentException, UnsupportedOperationException, IOException, SecurityException {
-        return Files.createTempFile( dir, prefix, suffix, attrs );
-    }
-
-    @Override
-    public Path createTempDirectory( final String prefix,
-                                     final FileAttribute<?>... attrs )
-            throws IllegalArgumentException, UnsupportedOperationException, IOException, SecurityException {
-        return Files.createTempDirectory( prefix, attrs );
-    }
-
-    @Override
-    public Path createTempDirectory( final Path dir,
-                                     final String prefix,
-                                     final FileAttribute<?>... attrs )
-            throws IllegalArgumentException, UnsupportedOperationException, IOException, SecurityException {
-        return Files.createTempDirectory( dir, prefix, attrs );
-    }
-
-    @Override
-    public Path copy( final Path source,
-                      final Path target,
-                      final CopyOption... options )
+    public synchronized Path copy( final Path source,
+                                   final Path target,
+                                   final CopyOption... options )
             throws UnsupportedOperationException, FileAlreadyExistsException,
             DirectoryNotEmptyException, IOException, SecurityException {
-        return Files.copy( source, target, options );
+        final Path result = Files.copy( source, target, buildOptions( options ) );
+
+        if ( isFileScheme( source ) && Files.exists( dot( source ) ) ) {
+            Files.copy( dot( source ), dot( target ), forceBuildOptions( options ) );
+        }
+
+        return result;
     }
 
     @Override
-    public Path move( final Path source,
-                      final Path target,
-                      final CopyOption... options )
+    public synchronized Path move( final Path source,
+                                   final Path target,
+                                   final CopyOption... options )
             throws UnsupportedOperationException, FileAlreadyExistsException,
             DirectoryNotEmptyException, AtomicMoveNotSupportedException, IOException, SecurityException {
-        return Files.move( source, target, options );
+        final Path result = Files.move( source, target, options );
+
+        if ( isFileScheme( source ) && Files.exists( dot( source ) ) ) {
+            Files.move( dot( source ), dot( target ), forceBuildOptions( options ) );
+        }
+
+        return result;
     }
 
     @Override
     public <V extends FileAttributeView> V getFileAttributeView( final Path path,
                                                                  final Class<V> type )
             throws IllegalArgumentException {
+        //TODO
         return Files.getFileAttributeView( path, type );
     }
 
@@ -150,6 +158,7 @@ public class IOServiceDotFileImpl
                                                              final Class<A> type )
             throws IllegalArgumentException, NoSuchFileException, UnsupportedOperationException,
             IOException, SecurityException {
+        //TODO
         return Files.readAttributes( path, type );
     }
 
@@ -158,13 +167,8 @@ public class IOServiceDotFileImpl
                                                final String attributes )
             throws UnsupportedOperationException, NoSuchFileException, IllegalArgumentException,
             IOException, SecurityException {
+        //TODO
         return Files.readAttributes( path, attributes );
-    }
-
-    @Override
-    public Path setAttributes( final Path path,
-                               final FileAttribute<?>... attrs ) throws UnsupportedOperationException, IllegalArgumentException, ClassCastException, IOException, SecurityException {
-        return null;
     }
 
     @Override
@@ -172,6 +176,7 @@ public class IOServiceDotFileImpl
                               final String attribute,
                               final Object value )
             throws UnsupportedOperationException, IllegalArgumentException, ClassCastException, IOException, SecurityException {
+        //TODO
         return Files.setAttribute( path, attribute, value );
     }
 
@@ -179,78 +184,79 @@ public class IOServiceDotFileImpl
     public Object getAttribute( final Path path,
                                 final String attribute )
             throws UnsupportedOperationException, IllegalArgumentException, IOException, SecurityException {
+        //TODO
         return Files.getAttribute( path, attribute );
     }
 
     @Override
-    public FileTime getLastModifiedTime( final Path path )
-            throws IllegalArgumentException, IOException, SecurityException {
-        return Files.getLastModifiedTime( path );
-    }
+    public synchronized Path write( final Path path,
+                                    final byte[] bytes,
+                                    final Set<? extends OpenOption> options,
+                                    final FileAttribute<?>... attrs ) throws IllegalArgumentException, IOException, UnsupportedOperationException {
+        final SeekableByteChannel byteChannel = Files.newByteChannel( path, buildOptions( options ), attrs );
 
-    @Override
-    public Path setLastModifiedTime( final Path path,
-                                     final FileTime time )
-            throws IOException, SecurityException {
-        return Files.setLastModifiedTime( path, time );
-    }
-
-    @Override
-    public BufferedWriter newBufferedWriter( final Path path,
-                                             final Charset cs,
-                                             final OpenOption... options )
-            throws IllegalArgumentException, IOException, UnsupportedOperationException, SecurityException {
-        return Files.newBufferedWriter( path, cs, options );
-    }
-
-    @Override
-    public long copy( final InputStream in,
-                      final Path target,
-                      final CopyOption... options )
-            throws IOException, FileAlreadyExistsException, DirectoryNotEmptyException, UnsupportedOperationException, SecurityException {
-        return Files.copy( in, target, options );
-    }
-
-    @Override
-    public Path write( final Path path,
-                       final byte[] bytes,
-                       final OpenOption... options )
-            throws IOException, UnsupportedOperationException, SecurityException {
-        return Files.write( path, bytes, options );
-    }
-
-    @Override
-    public Path write( final Path path,
-                       final Iterable<? extends CharSequence> lines,
-                       final Charset cs,
-                       final OpenOption... options ) throws IllegalArgumentException, IOException, UnsupportedOperationException, SecurityException {
-        return Files.write( path, lines, cs, options );
-    }
-
-    @Override
-    public Path write( final Path path,
-                       final String content,
-                       final Charset cs,
-                       final OpenOption... options )
-            throws IllegalArgumentException, IOException, UnsupportedOperationException {
-        return Files.write( path, content.getBytes( cs ), options );
-    }
-
-    @Override
-    public Path write( final Path path,
-                       final String content,
-                       final Charset cs,
-                       final Set<? extends OpenOption> options,
-                       final FileAttribute<?>... attrs )
-            throws IllegalArgumentException, IOException, UnsupportedOperationException {
-        final SeekableByteChannel byteChannel = Files.newByteChannel( path, options, attrs );
         try {
-            byteChannel.write( ByteBuffer.wrap( content.getBytes( cs ) ) );
+            byteChannel.write( ByteBuffer.wrap( bytes ) );
             byteChannel.close();
         } catch ( final java.io.IOException e ) {
             throw new IOException( e );
         }
 
+        if ( isFileScheme( path ) ) {
+            buildDotFile( path, attrs );
+        }
+
         return path;
     }
+
+    private Set<? extends OpenOption> buildOptions( final Set<? extends OpenOption> options ) {
+        return new HashSet<OpenOption>( options ) {{
+            add( new DotFileOption() );
+        }};
+    }
+
+    private CopyOption[] forceBuildOptions( final CopyOption[] options ) {
+        final CopyOption[] result = new CopyOption[ options.length + 1 ];
+        System.arraycopy( options, 0, result, 0, options.length );
+        result[ result.length ] = REPLACE_EXISTING;
+        return result;
+    }
+
+    private CopyOption[] buildOptions( final CopyOption... options ) {
+        final CopyOption[] result = new CopyOption[ options.length + 1 ];
+        System.arraycopy( options, 0, result, 0, options.length );
+        result[ result.length ] = new DotFileOption();
+        return result;
+    }
+
+    private void buildDotFile( final Path path,
+                               final FileAttribute<?>[] attrs ) {
+        if ( attrs.length > 0 ) {
+            final Properties properties = PropertiesBuilder.build( attrs );
+            final OutputStream out = Files.newOutputStream( dot( path ) );
+            try {
+                properties.store( out, "" );
+            } catch ( java.io.IOException e ) {
+                throw new IOException( e );
+            } finally {
+                try {
+                    out.close();
+                } catch ( java.io.IOException e ) {
+                }
+            }
+        }
+    }
+
+    private boolean isFileScheme( final Path path ) {
+        if ( path == null || path.getFileSystem() == null || path.getFileSystem().provider() == null ) {
+            return false;
+        }
+
+        return path.getFileSystem().provider().getScheme().equals( "file" );
+    }
+
+    private Path dot( final Path path ) {
+        return path.resolveSibling( "." + path.getFileName() );
+    }
+
 }

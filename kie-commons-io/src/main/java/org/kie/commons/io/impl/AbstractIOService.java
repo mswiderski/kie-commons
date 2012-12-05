@@ -17,12 +17,14 @@
 package org.kie.commons.io.impl;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -34,6 +36,8 @@ import org.kie.commons.io.FileSystemType;
 import org.kie.commons.io.IOService;
 import org.kie.commons.java.nio.IOException;
 import org.kie.commons.java.nio.channels.SeekableByteChannel;
+import org.kie.commons.java.nio.file.CopyOption;
+import org.kie.commons.java.nio.file.DirectoryNotEmptyException;
 import org.kie.commons.java.nio.file.DirectoryStream;
 import org.kie.commons.java.nio.file.FileAlreadyExistsException;
 import org.kie.commons.java.nio.file.FileSystem;
@@ -48,6 +52,7 @@ import org.kie.commons.java.nio.file.Path;
 import org.kie.commons.java.nio.file.Paths;
 import org.kie.commons.java.nio.file.ProviderNotFoundException;
 import org.kie.commons.java.nio.file.attribute.FileAttribute;
+import org.kie.commons.java.nio.file.attribute.FileTime;
 
 public abstract class AbstractIOService implements IOService {
 
@@ -213,6 +218,44 @@ public abstract class AbstractIOService implements IOService {
     }
 
     @Override
+    public Path createTempFile( final String prefix,
+                                final String suffix,
+                                final FileAttribute<?>... attrs )
+            throws IllegalArgumentException, UnsupportedOperationException, IOException, SecurityException {
+        return Files.createTempFile( prefix, suffix, attrs );
+    }
+
+    @Override
+    public Path createTempFile( final Path dir,
+                                final String prefix,
+                                final String suffix,
+                                final FileAttribute<?>... attrs )
+            throws IllegalArgumentException, UnsupportedOperationException, IOException, SecurityException {
+        return Files.createTempFile( dir, prefix, suffix, attrs );
+    }
+
+    @Override
+    public Path createTempDirectory( final String prefix,
+                                     final FileAttribute<?>... attrs )
+            throws IllegalArgumentException, UnsupportedOperationException, IOException, SecurityException {
+        return Files.createTempDirectory( prefix, attrs );
+    }
+
+    @Override
+    public Path createTempDirectory( final Path dir,
+                                     final String prefix,
+                                     final FileAttribute<?>... attrs )
+            throws IllegalArgumentException, UnsupportedOperationException, IOException, SecurityException {
+        return Files.createTempDirectory( dir, prefix, attrs );
+    }
+
+    @Override
+    public FileTime getLastModifiedTime( final Path path )
+            throws IllegalArgumentException, IOException, SecurityException {
+        return Files.getLastModifiedTime( path );
+    }
+
+    @Override
     public Map<String, Object> readAttributes( final Path path )
             throws UnsupportedOperationException, NoSuchFileException, IllegalArgumentException,
             IOException, SecurityException {
@@ -225,6 +268,13 @@ public abstract class AbstractIOService implements IOService {
             throws UnsupportedOperationException, IllegalArgumentException,
             ClassCastException, IOException, SecurityException {
         return setAttributes( path, convert( attrs ) );
+    }
+
+    @Override
+    public synchronized Path setAttributes( final Path path,
+                                            final FileAttribute<?>... attrs )
+            throws UnsupportedOperationException, IllegalArgumentException, ClassCastException, IOException, SecurityException {
+        return write( path, readAllBytes( path ), Collections.<OpenOption>emptySet(), attrs );
     }
 
     @Override
@@ -306,6 +356,47 @@ public abstract class AbstractIOService implements IOService {
     }
 
     @Override
+    public BufferedWriter newBufferedWriter( final Path path,
+                                             final Charset cs,
+                                             final OpenOption... options )
+            throws IllegalArgumentException, IOException, UnsupportedOperationException, SecurityException {
+        return Files.newBufferedWriter( path, cs, options );
+    }
+
+    @Override
+    public long copy( final InputStream in,
+                      final Path target,
+                      final CopyOption... options )
+            throws IOException, FileAlreadyExistsException, DirectoryNotEmptyException, UnsupportedOperationException, SecurityException {
+        return Files.copy( in, target, options );
+    }
+
+    @Override
+    public Path write( final Path path,
+                       final byte[] bytes,
+                       final OpenOption... options )
+            throws IOException, UnsupportedOperationException, SecurityException {
+        return Files.write( path, bytes, options );
+    }
+
+    @Override
+    public Path write( final Path path,
+                       final Iterable<? extends CharSequence> lines,
+                       final Charset cs,
+                       final OpenOption... options ) throws IllegalArgumentException, IOException, UnsupportedOperationException, SecurityException {
+        return Files.write( path, lines, cs, options );
+    }
+
+    @Override
+    public Path write( final Path path,
+                       final String content,
+                       final Charset cs,
+                       final OpenOption... options )
+            throws IllegalArgumentException, IOException, UnsupportedOperationException {
+        return Files.write( path, content.getBytes( cs ), options );
+    }
+
+    @Override
     public Path write( final Path path,
                        final String content,
                        final OpenOption... options )
@@ -361,10 +452,30 @@ public abstract class AbstractIOService implements IOService {
 
     @Override
     public Path write( final Path path,
+                       final byte[] bytes,
+                       final Map<String, ?> attrs,
+                       final OpenOption... options ) throws IOException, UnsupportedOperationException, SecurityException {
+        return write( path, bytes, new HashSet<OpenOption>( Arrays.asList( options ) ), convert( attrs ) );
+    }
+
+    @Override
+    public Path write( final Path path,
                        final String content,
                        final Set<? extends OpenOption> options,
                        final FileAttribute<?>... attrs )
             throws IllegalArgumentException, IOException, UnsupportedOperationException {
         return write( path, content, UTF_8, options, attrs );
     }
+
+    @Override
+    public Path write( final Path path,
+                       final String content,
+                       final Charset cs,
+                       final Set<? extends OpenOption> options,
+                       final FileAttribute<?>... attrs )
+            throws IllegalArgumentException, IOException, UnsupportedOperationException {
+
+        return write( path, content.getBytes( cs ), options, attrs );
+    }
+
 }
