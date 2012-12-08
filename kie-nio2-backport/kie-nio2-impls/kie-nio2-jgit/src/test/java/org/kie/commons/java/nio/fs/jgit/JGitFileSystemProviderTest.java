@@ -726,34 +726,34 @@ public class JGitFileSystemProviderTest extends AbstractTestInfra {
 
     @Test
     public void testFilteredNewDirectoryStream() throws IOException {
-        final URI newRepo = URI.create( "git://dirstream-test-repo" );
+        final URI newRepo = URI.create( "git://filter-dirstream-test-repo" );
         PROVIDER.newFileSystem( newRepo, EMPTY_ENV );
 
-        final Path path = PROVIDER.getPath( URI.create( "git://master@dirstream-test-repo/myfile1.txt" ) );
+        final Path path = PROVIDER.getPath( URI.create( "git://master@filter-dirstream-test-repo/myfile1.txt" ) );
 
         final OutputStream outStream = PROVIDER.newOutputStream( path );
         outStream.write( "my cool content".getBytes() );
         outStream.close();
 
-        final Path path2 = PROVIDER.getPath( URI.create( "git://user_branch@dirstream-test-repo/other/path/myfile2.txt" ) );
+        final Path path2 = PROVIDER.getPath( URI.create( "git://user_branch@filter-dirstream-test-repo/other/path/myfile2.txt" ) );
 
         final OutputStream outStream2 = PROVIDER.newOutputStream( path2 );
         outStream2.write( "my cool content".getBytes() );
         outStream2.close();
 
-        final Path path3 = PROVIDER.getPath( URI.create( "git://user_branch@dirstream-test-repo/myfile3.txt" ) );
+        final Path path3 = PROVIDER.getPath( URI.create( "git://user_branch@filter-dirstream-test-repo/myfile3.txt" ) );
 
         final OutputStream outStream3 = PROVIDER.newOutputStream( path3 );
         outStream3.write( "my cool content".getBytes() );
         outStream3.close();
 
-        final Path path4 = PROVIDER.getPath( URI.create( "git://user_branch@dirstream-test-repo/myfile4.xxx" ) );
+        final Path path4 = PROVIDER.getPath( URI.create( "git://user_branch@filter-dirstream-test-repo/myfile4.xxx" ) );
 
         final OutputStream outStream4 = PROVIDER.newOutputStream( path4 );
         outStream4.write( "my cool content".getBytes() );
         outStream4.close();
 
-        final DirectoryStream<Path> stream1 = PROVIDER.newDirectoryStream( PROVIDER.getPath( URI.create( "git://user_branch@dirstream-test-repo/" ) ), new DirectoryStream.Filter<Path>() {
+        final DirectoryStream<Path> stream1 = PROVIDER.newDirectoryStream( PROVIDER.getPath( URI.create( "git://user_branch@filter-dirstream-test-repo/" ) ), new DirectoryStream.Filter<Path>() {
             @Override
             public boolean accept( final Path entry ) throws org.kie.commons.java.nio.IOException {
                 if ( entry.toString().endsWith( ".xxx" ) ) {
@@ -765,7 +765,7 @@ public class JGitFileSystemProviderTest extends AbstractTestInfra {
 
         assertThat( stream1 ).isNotNull().hasSize( 1 ).contains( path4 );
 
-        final DirectoryStream<Path> stream2 = PROVIDER.newDirectoryStream( PROVIDER.getPath( URI.create( "git://master@dirstream-test-repo/" ) ), new DirectoryStream.Filter<Path>() {
+        final DirectoryStream<Path> stream2 = PROVIDER.newDirectoryStream( PROVIDER.getPath( URI.create( "git://master@filter-dirstream-test-repo/" ) ), new DirectoryStream.Filter<Path>() {
             @Override
             public boolean accept( final Path entry ) throws org.kie.commons.java.nio.IOException {
                 return false;

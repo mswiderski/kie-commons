@@ -388,9 +388,20 @@ public class JGitFileSystemProvider implements FileSystemProvider {
 
     @Override
     public DirectoryStream<Path> newDirectoryStream( final Path path,
-                                                     final DirectoryStream.Filter<Path> filter )
+                                                     final DirectoryStream.Filter<Path> pfilter )
             throws NotDirectoryException, IOException, SecurityException {
         checkNotNull( "path", path );
+        final DirectoryStream.Filter<Path> filter;
+        if ( pfilter == null ) {
+            filter = new DirectoryStream.Filter<Path>() {
+                @Override
+                public boolean accept( final Path entry ) throws IOException {
+                    return true;
+                }
+            };
+        } else {
+            filter = pfilter;
+        }
 
         final JGitPathImpl gPath = toPathImpl( path );
 
