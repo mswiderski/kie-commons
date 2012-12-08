@@ -21,66 +21,69 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.kie.commons.java.nio.IOException;
+import org.kie.commons.java.nio.base.GeneralPathImpl;
 import org.kie.commons.java.nio.file.FileSystem;
 import org.kie.commons.java.nio.file.Path;
-import org.kie.commons.java.nio.base.GeneralPathImpl;
 
 import static org.kie.commons.validation.PortablePreconditions.*;
 
 public class SimpleWindowsFileStore extends BaseSimpleFileStore {
 
     private static final Set<String> EXCLUDED_DRIVERS = new HashSet<String>() {{
-        add("A");
-        add("B");
+        add( "A" );
+        add( "B" );
     }};
 
     private int fstoreIndex = -1;
     private final File[] roots;
 
-    public SimpleWindowsFileStore(final File[] roots, final FileSystem fs, final String path) {
-        this(roots, GeneralPathImpl.create(fs, path, false));
+    public SimpleWindowsFileStore( final File[] roots,
+                                   final FileSystem fs,
+                                   final String path ) {
+        this( roots, GeneralPathImpl.create( fs, path, false ) );
     }
 
-    SimpleWindowsFileStore(final File[] roots, final Path path) {
-        super(roots, path);
-        checkNotNull("roots", roots);
-        checkCondition("should have at least one root", roots.length > 0);
-        checkNotNull("path", path);
+    SimpleWindowsFileStore( final File[] roots,
+                            final Path path ) {
+        super( roots, path );
+        checkNotNull( "roots", roots );
+        checkCondition( "should have at least one root", roots.length > 0 );
+        checkNotNull( "path", path );
         this.roots = roots;
 
-        if (path.isAbsolute()) {
-            for (int i = 0; i < listRoots().length; i++) {
-                if (listRoots()[i].toString().equals(path.getRoot().toString())) {
+        if ( path.isAbsolute() ) {
+            for ( int i = 0; i < listRoots().length; i++ ) {
+                if ( listRoots()[ i ].toString().equals( path.getRoot().toString() ) ) {
                     fstoreIndex = i;
                     break;
                 }
             }
         } else {
-            for (int i = 0; i < listRoots().length; i++) {
-                if (!EXCLUDED_DRIVERS.contains(listRoots()[i].toString().substring(0, 1).toUpperCase())) {
+            for ( int i = 0; i < listRoots().length; i++ ) {
+                if ( !EXCLUDED_DRIVERS.contains( listRoots()[ i ].toString().substring( 0, 1 ).toUpperCase() ) ) {
                     fstoreIndex = i;
                     break;
                 }
             }
         }
-        if (fstoreIndex == -1) {
+        if ( fstoreIndex == -1 ) {
             throw new IllegalStateException();
         }
     }
 
     @Override
     public String name() {
-        return listRoots()[fstoreIndex].getName();
+        return listRoots()[ fstoreIndex ].getName();
     }
 
     @Override
     public long getTotalSpace() throws IOException {
-        return listRoots()[fstoreIndex].getTotalSpace();
+        return listRoots()[ fstoreIndex ].getTotalSpace();
     }
 
     @Override
     public long getUsableSpace() throws IOException {
-        return listRoots()[fstoreIndex].getUsableSpace();
+        return listRoots()[ fstoreIndex ].getUsableSpace();
     }
 
     @Override

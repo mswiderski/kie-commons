@@ -45,6 +45,7 @@ import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.kie.commons.data.Pair;
 import org.kie.commons.java.nio.IOException;
+import org.kie.commons.java.nio.base.BasicFileAttributesImpl;
 import org.kie.commons.java.nio.channels.AsynchronousFileChannel;
 import org.kie.commons.java.nio.channels.SeekableByteChannel;
 import org.kie.commons.java.nio.file.AccessDeniedException;
@@ -69,14 +70,13 @@ import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
 import org.kie.commons.java.nio.file.attribute.FileAttribute;
 import org.kie.commons.java.nio.file.attribute.FileAttributeView;
 import org.kie.commons.java.nio.file.spi.FileSystemProvider;
-import org.kie.commons.java.nio.base.FlexibleFileAttributeView;
 import org.kie.commons.java.nio.fs.jgit.util.JGitUtil;
 
 import static org.eclipse.jgit.api.ListBranchCommand.ListMode.*;
 import static org.eclipse.jgit.lib.Constants.*;
-import static org.kie.commons.validation.PortablePreconditions.*;
 import static org.kie.commons.java.nio.fs.jgit.util.JGitUtil.*;
 import static org.kie.commons.java.nio.fs.jgit.util.JGitUtil.PathType.*;
+import static org.kie.commons.validation.PortablePreconditions.*;
 
 public class JGitFileSystemProvider implements FileSystemProvider {
 
@@ -219,7 +219,7 @@ public class JGitFileSystemProvider implements FileSystemProvider {
         final JGitFileSystem fileSystem = fileSystems.get( extractRepoName( uri ) );
 
         if ( fileSystem == null ) {
-            throw new FileSystemNotFoundException("No filesystem for uri (" + uri + ") found.");
+            throw new FileSystemNotFoundException( "No filesystem for uri (" + uri + ") found." );
         }
 
         if ( hasFetchFlag( uri ) ) {
@@ -721,8 +721,8 @@ public class JGitFileSystemProvider implements FileSystemProvider {
             throw new NoSuchFileException( path.toString() );
         }
 
-        if ( type == BasicFileAttributeView.class || type == JGitFileAttributeView.class ) {
-            return (V) new JGitFileAttributeView( gPath );
+        if ( type == BasicFileAttributeView.class || type == JGitBasicFileAttributeView.class ) {
+            return (V) new JGitBasicFileAttributeView( gPath );
         }
 
         return null;
@@ -743,8 +743,8 @@ public class JGitFileSystemProvider implements FileSystemProvider {
             throw new NoSuchFileException( path.toString() );
         }
 
-        if ( type == BasicFileAttributes.class || type == JGitFileAttributes.class ) {
-            final JGitFileAttributeView view = getFileAttributeView( path, JGitFileAttributeView.class, options );
+        if ( type == BasicFileAttributesImpl.class || type == BasicFileAttributes.class ) {
+            final JGitBasicFileAttributeView view = getFileAttributeView( path, JGitBasicFileAttributeView.class, options );
             return (A) view.readAttributes();
         }
 
@@ -764,7 +764,7 @@ public class JGitFileSystemProvider implements FileSystemProvider {
             throw new IllegalArgumentException( attributes );
         }
 
-        final FlexibleFileAttributeView view = getFileAttributeView( toPathImpl( path ), s[ 0 ], options );
+        final JGitBasicFileAttributeView view = getFileAttributeView( toPathImpl( path ), s[ 0 ], options );
         if ( view == null ) {
             throw new UnsupportedOperationException( "View '" + s[ 0 ] + "' not available" );
         }
@@ -785,7 +785,7 @@ public class JGitFileSystemProvider implements FileSystemProvider {
         if ( s[ 0 ].length() == 0 ) {
             throw new IllegalArgumentException( attribute );
         }
-        final FlexibleFileAttributeView view = getFileAttributeView( toPathImpl( path ), s[ 0 ], options );
+        final JGitBasicFileAttributeView view = getFileAttributeView( toPathImpl( path ), s[ 0 ], options );
         if ( view == null ) {
             throw new UnsupportedOperationException( "View '" + s[ 0 ] + "' not available" );
         }
@@ -878,11 +878,11 @@ public class JGitFileSystemProvider implements FileSystemProvider {
         throw new IllegalArgumentException( "Path not supported by current provider." );
     }
 
-    private FlexibleFileAttributeView getFileAttributeView( final JGitPathImpl path,
-                                                            final String name,
-                                                            final LinkOption... options ) {
+    private JGitBasicFileAttributeView getFileAttributeView( final JGitPathImpl path,
+                                                             final String name,
+                                                             final LinkOption... options ) {
         if ( name.equals( "basic" ) ) {
-            return new JGitFileAttributeView( path );
+            return new JGitBasicFileAttributeView( path );
         }
         return null;
     }

@@ -19,10 +19,19 @@ package org.kie.commons.java.nio.base;
 import java.util.Map;
 
 import org.kie.commons.java.nio.IOException;
+import org.kie.commons.java.nio.file.attribute.AttributeView;
+import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
 
-public interface FlexibleFileAttributeView {
+public interface ExtendedAttributeView extends AttributeView {
 
-    Map<String, Object> readAttributes(final String[] attributes) throws IOException;
+    <T extends BasicFileAttributes> BasicFileAttributes readAttributes() throws IOException;
 
-    void setAttribute(final String attribute, final Object value) throws IOException;
+    Map<String, Object> readAllAttributes() throws IOException;
+
+    Map<String, Object> readAttributes( final String[] attributes );
+
+    void setAttribute( final String attribute,
+                       final Object value ) throws IOException;
+
+    boolean isSerializable();
 }

@@ -26,12 +26,15 @@ import org.kie.commons.java.nio.file.spi.FileSystemProvider;
 
 public class SimpleWindowsFileSystem extends BaseSimpleFileSystem {
 
-    SimpleWindowsFileSystem(final FileSystemProvider provider, final String path) {
-        super(provider, path);
+    SimpleWindowsFileSystem( final FileSystemProvider provider,
+                             final String path ) {
+        super( provider, path );
     }
 
-    SimpleWindowsFileSystem(final File[] roots, final FileSystemProvider provider, final String path) {
-        super(roots, provider, path);
+    SimpleWindowsFileSystem( final File[] roots,
+                             final FileSystemProvider provider,
+                             final String path ) {
+        super( roots, provider, path );
     }
 
     @Override
@@ -50,17 +53,17 @@ public class SimpleWindowsFileSystem extends BaseSimpleFileSystem {
 
                     @Override
                     public boolean hasNext() {
-                        return (i + 1) < listRoots().length;
+                        return ( i + 1 ) < listRoots().length;
                     }
 
                     @Override
                     public Path next() {
                         i++;
-                        if (i >= listRoots().length) {
+                        if ( i >= listRoots().length ) {
                             throw new NoSuchElementException();
                         }
 
-                        return getPath(listRoots()[i].toString());
+                        return getPath( listRoots()[ i ].toString() );
                     }
 
                     @Override
@@ -82,16 +85,16 @@ public class SimpleWindowsFileSystem extends BaseSimpleFileSystem {
 
                     @Override
                     public boolean hasNext() {
-                        return (i + 1) < listRoots().length;
+                        return ( i + 1 ) < listRoots().length;
                     }
 
                     @Override
                     public FileStore next() {
                         i++;
-                        if (i >= listRoots().length) {
+                        if ( i >= listRoots().length ) {
                             throw new NoSuchElementException();
                         }
-                        return new SimpleWindowsFileStore(listRoots(), SimpleWindowsFileSystem.this, listRoots()[i].toString());
+                        return new SimpleWindowsFileStore( listRoots(), SimpleWindowsFileSystem.this, listRoots()[ i ].toString() );
                     }
 
                     @Override

@@ -74,10 +74,10 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.kie.commons.data.Pair;
 import org.kie.commons.java.nio.IOException;
+import org.kie.commons.java.nio.base.BasicFileAttributesImpl;
+import org.kie.commons.java.nio.base.FileTimeImpl;
 import org.kie.commons.java.nio.file.NoSuchFileException;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
-import org.kie.commons.java.nio.base.FileTimeImpl;
-import org.kie.commons.java.nio.fs.jgit.JGitFileAttributes;
 
 import static java.util.Collections.*;
 import static org.eclipse.jgit.api.MergeResult.*;
@@ -465,7 +465,7 @@ public final class JGitUtil {
             throw new RuntimeException( e );
         }
 
-        return new JGitFileAttributes( pathInfo.getObjectId() == null ? null : pathInfo.getObjectId().toString(), new FileTimeImpl( lastModified ), new FileTimeImpl( createDate ), pathInfo.getSize(), pathInfo.getPathType().equals( PathType.FILE ), pathInfo.getPathType().equals( PathType.DIRECTORY ) );
+        return new BasicFileAttributesImpl( pathInfo.getObjectId() == null ? null : pathInfo.getObjectId().toString(), new FileTimeImpl( lastModified ), new FileTimeImpl( createDate ), null, pathInfo.getSize(), pathInfo.getPathType().equals( PathType.FILE ), pathInfo.getPathType().equals( PathType.DIRECTORY ) );
     }
 
     public static void createBranch( final Git git,

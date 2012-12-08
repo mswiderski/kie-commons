@@ -23,29 +23,39 @@ import org.kie.commons.java.nio.file.OpenOption;
 
 public class JGitOp implements OpenOption {
 
-    final String name;
-    final String email;
-    final String message;
-    final Date when;
+    final String   name;
+    final String   email;
+    final String   message;
+    final Date     when;
     final TimeZone timeZone;
 
-    public JGitOp(final String name) {
-        this(name, null, null, null, null);
+    public JGitOp( final String name ) {
+        this( name, null, null, null, null );
     }
 
-    public JGitOp(final String name, final String message) {
-        this(name, null, message, null, null);
+    public JGitOp( final String name,
+                   final String message ) {
+        this( name, null, message, null, null );
     }
 
-    public JGitOp(final String name, final String email, final String message) {
-        this(name, email, message, null, null);
+    public JGitOp( final String name,
+                   final String email,
+                   final String message ) {
+        this( name, email, message, null, null );
     }
 
-    public JGitOp(final String name, final String email, final String message, final Date when) {
-        this(name, email, message, when, null);
+    public JGitOp( final String name,
+                   final String email,
+                   final String message,
+                   final Date when ) {
+        this( name, email, message, when, null );
     }
 
-    public JGitOp(final String name, final String email, final String message, final Date when, final TimeZone timeZone) {
+    public JGitOp( final String name,
+                   final String email,
+                   final String message,
+                   final Date when,
+                   final TimeZone timeZone ) {
         this.name = name;
         this.email = email;
         this.message = message;

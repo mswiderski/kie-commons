@@ -37,8 +37,6 @@ import org.kie.commons.java.nio.file.Path;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
 import org.kie.commons.java.nio.file.attribute.FileAttribute;
 import org.kie.commons.java.nio.file.attribute.FileAttributeView;
-import org.kie.commons.nio.dotfiles.PropertiesBuilder;
-import org.kie.commons.nio.dotfiles.options.DotFileOption;
 
 import static org.kie.commons.java.nio.file.StandardCopyOption.*;
 
@@ -211,7 +209,7 @@ public class IOServiceDotFileImpl
 
     private Set<? extends OpenOption> buildOptions( final Set<? extends OpenOption> options ) {
         return new HashSet<OpenOption>( options ) {{
-            add( new DotFileOption() );
+//            add( new DotFileOption() );
         }};
     }
 
@@ -225,26 +223,26 @@ public class IOServiceDotFileImpl
     private CopyOption[] buildOptions( final CopyOption... options ) {
         final CopyOption[] result = new CopyOption[ options.length + 1 ];
         System.arraycopy( options, 0, result, 0, options.length );
-        result[ result.length ] = new DotFileOption();
+//        result[ result.length ] = new DotFileOption();
         return result;
     }
 
     private void buildDotFile( final Path path,
                                final FileAttribute<?>[] attrs ) {
-        if ( attrs.length > 0 ) {
-            final Properties properties = PropertiesBuilder.build( attrs );
-            final OutputStream out = Files.newOutputStream( dot( path ) );
-            try {
-                properties.store( out, "" );
-            } catch ( java.io.IOException e ) {
-                throw new IOException( e );
-            } finally {
-                try {
-                    out.close();
-                } catch ( java.io.IOException e ) {
-                }
-            }
-        }
+//        if ( attrs.length > 0 ) {
+//            final Properties properties = PropertiesBuilder.build( attrs );
+//            final OutputStream out = Files.newOutputStream( dot( path ) );
+//            try {
+//                properties.store( out, "" );
+//            } catch ( java.io.IOException e ) {
+//                throw new IOException( e );
+//            } finally {
+//                try {
+//                    out.close();
+//                } catch ( java.io.IOException e ) {
+//                }
+//            }
+//        }
     }
 
     private boolean isFileScheme( final Path path ) {

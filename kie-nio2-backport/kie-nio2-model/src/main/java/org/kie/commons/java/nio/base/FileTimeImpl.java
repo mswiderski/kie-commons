@@ -44,8 +44,8 @@ public class FileTimeImpl implements FileTime {
     @Override
     public int compareTo(final FileTime o) {
         checkNotNull("o", o);
-        long thisVal = this.toMillis();
-        long anotherVal = o.toMillis();
+        final long thisVal = this.toMillis();
+        final long anotherVal = o.toMillis();
         return (thisVal < anotherVal ? -1 : (thisVal == anotherVal ? 0 : 1));
     }
 

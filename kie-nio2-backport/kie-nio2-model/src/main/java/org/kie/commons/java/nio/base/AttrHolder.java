@@ -16,7 +16,16 @@
 
 package org.kie.commons.java.nio.base;
 
-public interface AttrHolder<A> {
+import org.kie.commons.java.nio.file.attribute.AttributeView;
 
-    A getAttrs();
+public interface AttrHolder {
+
+    AttrsStorage getAttrStorage();
+
+    <V extends AttributeView> void addAttrView( final V view );
+
+    <V extends AttributeView> V getAttrView( final Class<V> type );
+
+    <V extends AttributeView> V getAttrView( final String name );
+
 }

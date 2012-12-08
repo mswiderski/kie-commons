@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package org.kie.commons.java.nio.file.attribute;
+package org.kie.commons.java.nio.base;
 
-import org.kie.commons.java.nio.IOException;
+import java.util.Properties;
 
-public interface BasicFileAttributeView extends FileAttributeView {
+public interface AttrsStorage extends AttrHolder {
 
-    <T extends BasicFileAttributes> BasicFileAttributes readAttributes() throws IOException;
+    Properties toProperties();
 
-    void setTimes(FileTime lastModifiedTime, FileTime lastAccessTime, FileTime createTime) throws IOException;
+    void clear();
 }

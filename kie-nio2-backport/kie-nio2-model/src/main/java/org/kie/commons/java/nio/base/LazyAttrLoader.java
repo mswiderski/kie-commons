@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-package org.kie.commons.java.nio.file.attribute;
+package org.kie.commons.java.nio.base;
 
-import org.kie.commons.java.nio.IOException;
+public interface LazyAttrLoader<T> {
 
-public interface BasicFileAttributeView extends FileAttributeView {
+    T get();
 
-    <T extends BasicFileAttributes> BasicFileAttributes readAttributes() throws IOException;
-
-    void setTimes(FileTime lastModifiedTime, FileTime lastAccessTime, FileTime createTime) throws IOException;
 }

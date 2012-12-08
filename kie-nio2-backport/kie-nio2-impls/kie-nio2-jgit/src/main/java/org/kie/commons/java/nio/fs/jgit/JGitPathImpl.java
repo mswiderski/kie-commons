@@ -19,10 +19,8 @@ package org.kie.commons.java.nio.fs.jgit;
 import java.io.File;
 
 import org.eclipse.jgit.lib.ObjectId;
-import org.kie.commons.java.nio.file.Path;
-import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
 import org.kie.commons.java.nio.base.AbstractPath;
-import org.kie.commons.java.nio.fs.jgit.util.JGitUtil;
+import org.kie.commons.java.nio.file.Path;
 
 import static org.eclipse.jgit.lib.Constants.*;
 
@@ -32,18 +30,26 @@ public class JGitPathImpl extends AbstractPath<JGitFileSystem> {
 
     private final ObjectId objectId;
 
-    private JGitPathImpl(final JGitFileSystem fs, final String path, final String host, final ObjectId id,
-            final boolean isRoot, final boolean isRealPath, final boolean isNormalized) {
-        super(fs, path, host, isRoot, isRealPath, isNormalized);
+    private JGitPathImpl( final JGitFileSystem fs,
+                          final String path,
+                          final String host,
+                          final ObjectId id,
+                          final boolean isRoot,
+                          final boolean isRealPath,
+                          final boolean isNormalized ) {
+        super( fs, path, host, isRoot, isRealPath, isNormalized );
         this.objectId = id;
     }
 
     @Override
-    protected RootInfo setupRoot(final JGitFileSystem fs, final String pathx, final String host, final boolean isRoot) {
-        final boolean isRooted = isRoot ? true : pathx.startsWith("/");
+    protected RootInfo setupRoot( final JGitFileSystem fs,
+                                  final String pathx,
+                                  final String host,
+                                  final boolean isRoot ) {
+        final boolean isRooted = isRoot ? true : pathx.startsWith( "/" );
 
         final boolean isAbsolute;
-        if (isRooted) {
+        if ( isRooted ) {
             isAbsolute = true;
         } else {
             isAbsolute = false;
@@ -52,13 +58,13 @@ public class JGitPathImpl extends AbstractPath<JGitFileSystem> {
         int lastOffset = isAbsolute ? 1 : 0;
 
         final boolean isFinalRoot;
-        if (pathx.length() == 1 && lastOffset == 1) {
+        if ( pathx.length() == 1 && lastOffset == 1 ) {
             isFinalRoot = true;
         } else {
             isFinalRoot = isRoot;
         }
 
-        return new RootInfo(lastOffset, isAbsolute, isFinalRoot, pathx.getBytes());
+        return new RootInfo( lastOffset, isAbsolute, isFinalRoot, pathx.getBytes() );
     }
 
     @Override
@@ -67,25 +73,42 @@ public class JGitPathImpl extends AbstractPath<JGitFileSystem> {
     }
 
     @Override
-    protected Path newRoot(final JGitFileSystem fs, String substring, final String host, boolean realPath) {
-        return new JGitPathImpl(fs, substring, host, null, true, realPath, true);
+    protected Path newRoot( final JGitFileSystem fs,
+                            String substring,
+                            final String host,
+                            boolean realPath ) {
+        return new JGitPathImpl( fs, substring, host, null, true, realPath, true );
     }
 
     @Override
-    protected Path newPath(final JGitFileSystem fs, final String substring, final String host, final boolean isRealPath, final boolean isNormalized) {
-        return new JGitPathImpl(fs, substring, host, null, false, isRealPath, isNormalized);
+    protected Path newPath( final JGitFileSystem fs,
+                            final String substring,
+                            final String host,
+                            final boolean isRealPath,
+                            final boolean isNormalized ) {
+        return new JGitPathImpl( fs, substring, host, null, false, isRealPath, isNormalized );
     }
 
-    public static JGitPathImpl create(final JGitFileSystem fs, final String path, final String host, final ObjectId id, boolean isRealPath) {
-        return new JGitPathImpl(fs, setupPath(path), setupHost(host), id, false, isRealPath, false);
+    public static JGitPathImpl create( final JGitFileSystem fs,
+                                       final String path,
+                                       final String host,
+                                       final ObjectId id,
+                                       boolean isRealPath ) {
+        return new JGitPathImpl( fs, setupPath( path ), setupHost( host ), id, false, isRealPath, false );
     }
 
-    public static JGitPathImpl create(final JGitFileSystem fs, final String path, final String host, boolean isRealPath) {
-        return new JGitPathImpl(fs, setupPath(path), setupHost(host), null, false, isRealPath, false);
+    public static JGitPathImpl create( final JGitFileSystem fs,
+                                       final String path,
+                                       final String host,
+                                       boolean isRealPath ) {
+        return new JGitPathImpl( fs, setupPath( path ), setupHost( host ), null, false, isRealPath, false );
     }
 
-    public static JGitPathImpl createRoot(final JGitFileSystem fs, final String path, final String host, boolean isRealPath) {
-        return new JGitPathImpl(fs, setupPath(path), setupHost(host), null, true, isRealPath, true);
+    public static JGitPathImpl createRoot( final JGitFileSystem fs,
+                                           final String path,
+                                           final String host,
+                                           boolean isRealPath ) {
+        return new JGitPathImpl( fs, setupPath( path ), setupHost( host ), null, true, isRealPath, true );
     }
 
     @Override
@@ -94,32 +117,27 @@ public class JGitPathImpl extends AbstractPath<JGitFileSystem> {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    protected BasicFileAttributes newAttrs() {
-        return JGitUtil.buildBasicFileAttributes(this.getFileSystem().gitRepo(), this.getRefTree(), this.getPath());
-    }
-
-    private static String setupHost(final String host) {
-        if (host.indexOf("@") == -1) {
+    private static String setupHost( final String host ) {
+        if ( host.indexOf( "@" ) == -1 ) {
             return DEFAULT_REF_TREE + "@" + host;
         }
 
         return host;
     }
 
-    private static String setupPath(final String path) {
-        if (path.isEmpty()) {
+    private static String setupPath( final String path ) {
+        if ( path.isEmpty() ) {
             return "/";
         }
         return path;
     }
 
     public String getRefTree() {
-        return host.substring(0, host.indexOf("@"));
+        return host.substring( 0, host.indexOf( "@" ) );
     }
 
     public String getPath() {
-        return new String(path);
+        return new String( path );
     }
 
 }

@@ -25,10 +25,11 @@ import org.kie.commons.java.nio.file.spi.FileSystemProvider;
 
 public class SimpleUnixFileSystem extends BaseSimpleFileSystem {
 
-    final FileStore fileStore = new SimpleUnixFileStore(null);
+    final FileStore fileStore = new SimpleUnixFileStore( null );
 
-    SimpleUnixFileSystem(final FileSystemProvider provider, final String path) {
-        super(provider, path);
+    SimpleUnixFileSystem( final FileSystemProvider provider,
+                          final String path ) {
+        super( provider, path );
     }
 
     @Override
@@ -44,10 +45,11 @@ public class SimpleUnixFileSystem extends BaseSimpleFileSystem {
                         return i < 1;
                     }
 
-                    @Override public Path next() {
-                        if (i < 1) {
+                    @Override
+                    public Path next() {
+                        if ( i < 1 ) {
                             i++;
-                            return getPath("/");
+                            return getPath( "/" );
                         } else {
                             throw new NoSuchElementException();
                         }
@@ -75,8 +77,9 @@ public class SimpleUnixFileSystem extends BaseSimpleFileSystem {
                         return i < 1;
                     }
 
-                    @Override public FileStore next() {
-                        if (i < 1) {
+                    @Override
+                    public FileStore next() {
+                        if ( i < 1 ) {
                             i++;
                             return fileStore;
                         } else {

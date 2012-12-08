@@ -23,8 +23,8 @@ import org.kie.commons.java.nio.file.Path;
 
 public class SimpleUnixFileStore extends BaseSimpleFileStore {
 
-    SimpleUnixFileStore(final Path path) {
-        super(path);
+    SimpleUnixFileStore( final Path path ) {
+        super( path );
     }
 
     @Override
@@ -34,18 +34,17 @@ public class SimpleUnixFileStore extends BaseSimpleFileStore {
 
     @Override
     public long getTotalSpace() throws IOException {
-        return File.listRoots()[0].getTotalSpace();
+        return File.listRoots()[ 0 ].getTotalSpace();
     }
 
     @Override
     public long getUsableSpace() throws IOException {
-        return File.listRoots()[0].getUsableSpace();
+        return File.listRoots()[ 0 ].getUsableSpace();
     }
 
     @Override
     public long getUnallocatedSpace() throws IOException {
         throw new UnsupportedOperationException();
     }
-
 
 }
