@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
@@ -402,24 +403,71 @@ public class JGitFileSystemProvider implements FileSystemProvider {
         final List<JGitPathInfo> pathContent = listPathContent( gPath.getFileSystem().gitRepo(), gPath.getRefTree(), gPath.getPath() );
 
         return new DirectoryStream<Path>() {
+            boolean isClosed = false;
+
             @Override
             public void close() throws IOException {
+                if ( isClosed ) {
+                    throw new IOException();
+                }
+                isClosed = true;
             }
 
             @Override
             public Iterator<Path> iterator() {
+                if ( isClosed ) {
+                    throw new IOException();
+                }
                 return new Iterator<Path>() {
-                    private Iterator<JGitPathInfo> contentIterator = pathContent.iterator();
+                    private int i = -1;
+                    private Path nextEntry = null;
+                    public boolean atEof = false;
 
                     @Override
                     public boolean hasNext() {
-                        return contentIterator.hasNext();
+                        if ( nextEntry == null && !atEof ) {
+                            nextEntry = readNextEntry();
+                        }
+                        return nextEntry != null;
                     }
 
                     @Override
                     public Path next() {
-                        final JGitPathInfo content = contentIterator.next();
-                        return JGitPathImpl.create( gPath.getFileSystem(), "/" + content.getPath(), gPath.getHost(), content.getObjectId(), gPath.isRealPath() );
+                        final Path result;
+                        if ( nextEntry == null && !atEof ) {
+                            result = readNextEntry();
+                        } else {
+                            result = nextEntry;
+                            nextEntry = null;
+                        }
+                        if ( result == null ) {
+                            throw new NoSuchElementException();
+                        }
+                        return result;
+                    }
+
+                    private Path readNextEntry() {
+                        if ( atEof ) {
+                            return null;
+                        }
+
+                        Path result = null;
+                        while ( true ) {
+                            i++;
+                            if ( i >= pathContent.size() ) {
+                                atEof = true;
+                                break;
+                            }
+
+                            final JGitPathInfo content = pathContent.get( i );
+                            final Path path = JGitPathImpl.create( gPath.getFileSystem(), "/" + content.getPath(), gPath.getHost(), content.getObjectId(), gPath.isRealPath() );
+                            if ( filter.accept( path ) ) {
+                                result = path;
+                                break;
+                            }
+                        }
+
+                        return result;
                     }
 
                     @Override
