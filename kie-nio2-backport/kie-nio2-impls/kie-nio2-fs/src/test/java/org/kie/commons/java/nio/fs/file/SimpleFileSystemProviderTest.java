@@ -208,7 +208,7 @@ public class SimpleFileSystemProviderTest {
     public void checkNewByteChannelToCreateFile() throws IOException {
         final SimpleFileSystemProvider fsProvider = new SimpleFileSystemProvider();
 
-        final String userBasedPath = System.getProperty( "user.dir" ) + "/some_file_here.txt";
+        final String userBasedPath = System.getProperty( "user.dir" ) + "/byte_some_file_here.txt";
 
         final Path path = GeneralPathImpl.create( fsProvider.getFileSystem( URI.create( "file:///" ) ), userBasedPath, false );
         assertThat( path.toFile().exists() ).isFalse();
@@ -270,10 +270,10 @@ public class SimpleFileSystemProviderTest {
     }
 
     @Test
-    public void seekableByteChannelNotImplemented() throws IOException {
+    public void seekableByteChannel() throws IOException {
         final SimpleFileSystemProvider fsProvider = new SimpleFileSystemProvider();
 
-        final String userBasedPath = System.getProperty( "user.dir" ) + "/some_file_here.txt";
+        final String userBasedPath = System.getProperty( "user.dir" ) + "/my_byte_some_file_here.txt";
 
         final Path path = GeneralPathImpl.create( fsProvider.getFileSystem( URI.create( "file:///" ) ), userBasedPath, false );
         assertThat( path.toFile().exists() ).isFalse();
@@ -283,49 +283,47 @@ public class SimpleFileSystemProviderTest {
         assertThat( channel ).isNotNull();
         assertThat( path.toFile().exists() ).isTrue();
 
+        assertThat( channel.isOpen() ).isTrue();
+
+        channel.close();
+
         assertThat( channel.isOpen() ).isFalse();
 
-        try {
-            channel.close();
-        } catch ( NotImplementedException ex ) {
-            fail( "method not implemented - but no exception expected!" );
-        }
-
-        try {
-            channel.position();
-            fail( "method not implemented - exception expected!" );
-        } catch ( NotImplementedException ex ) {
-        }
-
-        try {
-            channel.position( 1L );
-            fail( "method not implemented - exception expected!" );
-        } catch ( NotImplementedException ex ) {
-        }
-
-        try {
-            channel.size();
-            fail( "method not implemented - exception expected!" );
-        } catch ( NotImplementedException ex ) {
-        }
-
-        try {
-            channel.truncate( 1L );
-            fail( "method not implemented - exception expected!" );
-        } catch ( NotImplementedException ex ) {
-        }
-
-        try {
-            channel.read( null );
-            fail( "method not implemented - exception expected!" );
-        } catch ( NotImplementedException ex ) {
-        }
-
-        try {
-            channel.write( null );
-            fail( "method not implemented - exception expected!" );
-        } catch ( NotImplementedException ex ) {
-        }
+//        try {
+//            channel.position();
+//            fail( "method not implemented - exception expected!" );
+//        } catch ( NotImplementedException ex ) {
+//        }
+//
+//        try {
+//            channel.position( 1L );
+//            fail( "method not implemented - exception expected!" );
+//        } catch ( NotImplementedException ex ) {
+//        }
+//
+//        try {
+//            channel.size();
+//            fail( "method not implemented - exception expected!" );
+//        } catch ( NotImplementedException ex ) {
+//        }
+//
+//        try {
+//            channel.truncate( 1L );
+//            fail( "method not implemented - exception expected!" );
+//        } catch ( NotImplementedException ex ) {
+//        }
+//
+//        try {
+//            channel.read( null );
+//            fail( "method not implemented - exception expected!" );
+//        } catch ( NotImplementedException ex ) {
+//        }
+//
+//        try {
+//            channel.write( null );
+//            fail( "method not implemented - exception expected!" );
+//        } catch ( NotImplementedException ex ) {
+//        }
 
         path.toFile().delete();
         assertThat( path.toFile().exists() ).isFalse();

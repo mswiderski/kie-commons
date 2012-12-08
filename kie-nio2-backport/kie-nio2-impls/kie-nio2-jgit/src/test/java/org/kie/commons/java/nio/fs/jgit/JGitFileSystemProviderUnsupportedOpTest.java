@@ -85,22 +85,6 @@ public class JGitFileSystemProviderUnsupportedOpTest {
     }
 
     @Test
-    public void testNewByteChannelUnsupportedOp() {
-        final URI newRepo = URI.create("git://newbytechannelrepo-name");
-
-        PROVIDER.newFileSystem(newRepo, EMPTY_ENV);
-
-        final Path path = PROVIDER.getPath(URI.create("git://newbytechannelrepo-name/file.txt"));
-
-        final Set<? extends OpenOption> options = emptySet();
-        try {
-            PROVIDER.newByteChannel(path, options);
-            failBecauseExceptionWasNotThrown(UnsupportedOperationException.class);
-        } catch (Exception e) {
-        }
-    }
-
-    @Test
     public void testCreateSymbolicLinkUnsupportedOp() {
         final URI newRepo = URI.create("git://symbolic-repo-name");
 

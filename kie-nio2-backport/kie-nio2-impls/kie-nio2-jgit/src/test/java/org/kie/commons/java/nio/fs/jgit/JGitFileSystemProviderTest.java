@@ -30,6 +30,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.ObjectId;
 import org.junit.Test;
 import org.kie.commons.data.Pair;
+import org.kie.commons.java.nio.base.NotImplementedException;
 import org.kie.commons.java.nio.file.DirectoryNotEmptyException;
 import org.kie.commons.java.nio.file.DirectoryStream;
 import org.kie.commons.java.nio.file.FileAlreadyExistsException;
@@ -43,7 +44,6 @@ import org.kie.commons.java.nio.file.Path;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributeView;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
 import org.kie.commons.java.nio.file.attribute.FileTime;
-import org.kie.commons.java.nio.base.NotImplementedException;
 import org.kie.commons.java.nio.fs.jgit.util.JGitUtil;
 
 import static org.fest.assertions.api.Assertions.*;
@@ -109,7 +109,9 @@ public class JGitFileSystemProviderTest extends AbstractTestInfra {
 
         final Git origin = JGitUtil.newRepository( gitFolder );
 
-        commit( origin, "master", "file.txt", tempFile( "temp" ), "user1", "user1@example.com", "commitx", null, null );
+        commit( origin, "master", "user1", "user1@example.com", "commitx", null, null, new HashMap<String, File>() {{
+            put( "file.txt", tempFile( "temp" ) );
+        }} );
 
         final URI newRepo = URI.create( "git://my-repo-name" );
 
@@ -123,7 +125,9 @@ public class JGitFileSystemProviderTest extends AbstractTestInfra {
 
         assertThat( fs.getRootDirectories() ).hasSize( 2 );
 
-        commit( origin, "XmasterX", "fileXXXXX.txt", tempFile( "temp" ), "user1", "user1@example.com", "commitx", null, null );
+        commit( origin, "XmasterX", "user1", "user1@example.com", "commitx", null, null, new HashMap<String, File>() {{
+            put( "fileXXXXX.txt", tempFile( "temp" ) );
+        }} );
 
         PROVIDER.getFileSystem( URI.create( "git://my-repo-name?fetch" ) );
 
@@ -217,7 +221,9 @@ public class JGitFileSystemProviderTest extends AbstractTestInfra {
 
         final Git origin = JGitUtil.newRepository( gitFolder );
 
-        commit( origin, "master", "myfile.txt", tempFile( "temp\n.origin\n.content" ), "user", "user@example.com", "commit message", null, null );
+        commit( origin, "master", "user", "user@example.com", "commit message", null, null, new HashMap<String, File>() {{
+            put( "myfile.txt", tempFile( "temp\n.origin\n.content" ) );
+        }} );
 
         final URI newRepo = URI.create( "git://inputstream-test-repo" );
 
@@ -249,7 +255,9 @@ public class JGitFileSystemProviderTest extends AbstractTestInfra {
 
         final Git origin = JGitUtil.newRepository( gitFolder );
 
-        commit( origin, "master", "path/to/file/myfile.txt", tempFile( "temp\n.origin\n.content" ), "user", "user@example.com", "commit message", null, null );
+        commit( origin, "master", "user", "user@example.com", "commit message", null, null, new HashMap<String, File>() {{
+            put( "path/to/file/myfile.txt", tempFile( "temp\n.origin\n.content" ) );
+        }} );
 
         final URI newRepo = URI.create( "git://xinputstream-test-repo" );
 
@@ -281,7 +289,9 @@ public class JGitFileSystemProviderTest extends AbstractTestInfra {
 
         final Git origin = JGitUtil.newRepository( gitFolder );
 
-        commit( origin, "master", "path/to/file/myfile.txt", tempFile( "temp\n.origin\n.content" ), "user", "user@example.com", "commit message", null, null );
+        commit( origin, "master", "user", "user@example.com", "commit message", null, null, new HashMap<String, File>() {{
+            put( "path/to/file/myfile.txt", tempFile( "temp\n.origin\n.content" ) );
+        }} );
 
         final URI newRepo = URI.create( "git://xxinputstream-test-repo" );
 
@@ -306,7 +316,9 @@ public class JGitFileSystemProviderTest extends AbstractTestInfra {
 
         final Git origin = JGitUtil.newRepository( gitFolder );
 
-        commit( origin, "master", "file.txt", tempFile( "temp.origin.content.2" ), "user1", "user1@example.com", "commitx", null, null );
+        commit( origin, "master", "user1", "user1@example.com", "commitx", null, null, new HashMap<String, File>() {{
+            put( "file.txt", tempFile( "temp.origin.content.2" ) );
+        }} );
 
         final URI newRepo = URI.create( "git://inputstream-not-exists-test-repo" );
 
@@ -330,8 +342,12 @@ public class JGitFileSystemProviderTest extends AbstractTestInfra {
 
         final Git origin = JGitUtil.newRepository( gitFolder );
 
-        commit( origin, "master", "myfile.txt", tempFile( "temp\n.origin\n.content" ), "user", "user@example.com", "commit message", null, null );
-        commit( origin, "user_branch", "path/to/some/file/myfile.txt", tempFile( "some\n.content\nhere" ), "user", "user@example.com", "commit message", null, null );
+        commit( origin, "master", "user", "user@example.com", "commit message", null, null, new HashMap<String, File>() {{
+            put( "myfile.txt", tempFile( "temp\n.origin\n.content" ) );
+        }} );
+        commit( origin, "user_branch", "user", "user@example.com", "commit message", null, null, new HashMap<String, File>() {{
+            put( "path/to/some/file/myfile.txt", tempFile( "some\n.content\nhere" ) );
+        }} );
 
         final URI newRepo = URI.create( "git://outstream-test-repo" );
 
@@ -372,8 +388,12 @@ public class JGitFileSystemProviderTest extends AbstractTestInfra {
 
         final Git origin = JGitUtil.newRepository( gitFolder );
 
-        commit( origin, "master", "myfile.txt", tempFile( "temp\n.origin\n.content" ), "user", "user@example.com", "commit message", null, null );
-        commit( origin, "user_branch", "path/to/some/file/myfile.txt", tempFile( "some\n.content\nhere" ), "user", "user@example.com", "commit message", null, null );
+        commit( origin, "master", "user", "user@example.com", "commit message", null, null, new HashMap<String, File>() {{
+            put( "myfile.txt", tempFile( "temp\n.origin\n.content" ) );
+        }} );
+        commit( origin, "user_branch", "user", "user@example.com", "commit message", null, null, new HashMap<String, File>() {{
+            put( "path/to/some/file/myfile.txt", tempFile( "some\n.content\nhere" ) );
+        }} );
 
         final URI newRepo = URI.create( "git://outstreamwithop-test-repo" );
 

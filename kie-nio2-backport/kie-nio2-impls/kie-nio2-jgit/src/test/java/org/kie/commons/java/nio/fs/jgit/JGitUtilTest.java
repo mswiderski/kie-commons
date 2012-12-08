@@ -18,6 +18,7 @@ package org.kie.commons.java.nio.fs.jgit;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.transport.CredentialsProvider;
@@ -35,61 +36,73 @@ public class JGitUtilTest extends AbstractTestInfra {
     public void testNewRepo() throws IOException {
 
         final File parentFolder = createTempDirectory();
-        final File gitFolder = new File(parentFolder, "mytest.git");
+        final File gitFolder = new File( parentFolder, "mytest.git" );
 
-        final Git git = JGitUtil.newRepository(gitFolder);
+        final Git git = JGitUtil.newRepository( gitFolder );
 
-        assertThat(git).isNotNull();
+        assertThat( git ).isNotNull();
 
-        assertThat(branchList(git).size()).isEqualTo(0);
+        assertThat( branchList( git ).size() ).isEqualTo( 0 );
 
-        commit(git, "master", "file.txt", tempFile("temp"), "name", "name@example.com", "commit", null, null);
+        commit( git, "master", "name", "name@example.com", "commit", null, null, new HashMap<String, File>() {{
+            put( "file.txt", tempFile( "temp" ) );
+        }} );
 
-        assertThat(branchList(git).size()).isEqualTo(1);
+        assertThat( branchList( git ).size() ).isEqualTo( 1 );
     }
 
     @Test
     public void testClone() throws IOException {
         final File parentFolder = createTempDirectory();
-        final File gitFolder = new File(parentFolder, "mytest.git");
+        final File gitFolder = new File( parentFolder, "mytest.git" );
 
-        final Git origin = JGitUtil.newRepository(gitFolder);
+        final Git origin = JGitUtil.newRepository( gitFolder );
 
-        commit(origin, "user_branch", "file2.txt", tempFile("temp2222"), "name", "name@example.com", "commit!", null, null);
-        commit(origin, "master", "file.txt", tempFile("temp"), "name", "name@example.com", "commit", null, null);
-        commit(origin, "master", "file3.txt", tempFile("temp3"), "name", "name@example.com", "commit", null, null);
+        commit( origin, "user_branch", "name", "name@example.com", "commit!", null, null, new HashMap<String, File>() {{
+            put( "file2.txt", tempFile( "temp2222" ) );
+        }} );
+        commit( origin, "master", "name", "name@example.com", "commit", null, null, new HashMap<String, File>() {{
+            put( "file.txt", tempFile( "temp" ) );
+        }} );
+        commit( origin, "master", "name", "name@example.com", "commit", null, null, new HashMap<String, File>() {{
+            put( "file3.txt", tempFile( "temp3" ) );
+        }} );
 
-        final File gitClonedFolder = new File(parentFolder, "myclone.git");
+        final File gitClonedFolder = new File( parentFolder, "myclone.git" );
 
-        final Git git = cloneRepository(gitClonedFolder, origin.getRepository().getDirectory().toString(), CredentialsProvider.getDefault());
+        final Git git = cloneRepository( gitClonedFolder, origin.getRepository().getDirectory().toString(), CredentialsProvider.getDefault() );
 
-        assertThat(git).isNotNull();
+        assertThat( git ).isNotNull();
 
-        assertThat(branchList(git, ALL)).hasSize(4);
+        assertThat( branchList( git, ALL ) ).hasSize( 4 );
 
-        assertThat(branchList(git, ALL).get(0).getName()).isEqualTo("refs/heads/master");
-        assertThat(branchList(git, ALL).get(1).getName()).isEqualTo("refs/heads/user_branch");
-        assertThat(branchList(git, ALL).get(2).getName()).isEqualTo("refs/remotes/origin/master");
-        assertThat(branchList(git, ALL).get(3).getName()).isEqualTo("refs/remotes/origin/user_branch");
+        assertThat( branchList( git, ALL ).get( 0 ).getName() ).isEqualTo( "refs/heads/master" );
+        assertThat( branchList( git, ALL ).get( 1 ).getName() ).isEqualTo( "refs/heads/user_branch" );
+        assertThat( branchList( git, ALL ).get( 2 ).getName() ).isEqualTo( "refs/remotes/origin/master" );
+        assertThat( branchList( git, ALL ).get( 3 ).getName() ).isEqualTo( "refs/remotes/origin/user_branch" );
     }
 
     @Test
     public void testPathResolve() throws IOException {
         final File parentFolder = createTempDirectory();
-        final File gitFolder = new File(parentFolder, "mytest.git");
+        final File gitFolder = new File( parentFolder, "mytest.git" );
 
-        final Git origin = JGitUtil.newRepository(gitFolder);
+        final Git origin = JGitUtil.newRepository( gitFolder );
 
-        commit(origin, "user_branch", "path/to/file2.txt", tempFile("temp2222"), "name", "name@example.com", "commit!", null, null);
-        commit(origin, "user_branch", "path/to/file3.txt", tempFile("temp2222"), "name", "name@example.com", "commit!", null, null);
+        commit( origin, "user_branch", "name", "name@example.com", "commit!", null, null, new HashMap<String, File>() {{
+            put( "path/to/file2.txt", tempFile( "temp2222" ) );
+        }} );
+        commit( origin, "user_branch", "name", "name@example.com", "commit!", null, null, new HashMap<String, File>() {{
+            put( "path/to/file3.txt", tempFile( "temp2222" ) );
+        }} );
 
-        final File gitClonedFolder = new File(parentFolder, "myclone.git");
+        final File gitClonedFolder = new File( parentFolder, "myclone.git" );
 
-        final Git git = cloneRepository(gitClonedFolder, origin.getRepository().getDirectory().toString(), CredentialsProvider.getDefault());
+        final Git git = cloneRepository( gitClonedFolder, origin.getRepository().getDirectory().toString(), CredentialsProvider.getDefault() );
 
-        assertThat(JGitUtil.checkPath(git, "user_branch", "pathx/").getK1()).isEqualTo(NOT_FOUND);
-        assertThat(JGitUtil.checkPath(git, "user_branch", "path/to/file2.txt").getK1()).isEqualTo(FILE);
-        assertThat(JGitUtil.checkPath(git, "user_branch", "path/to").getK1()).isEqualTo(DIRECTORY);
+        assertThat( JGitUtil.checkPath( git, "user_branch", "pathx/" ).getK1() ).isEqualTo( NOT_FOUND );
+        assertThat( JGitUtil.checkPath( git, "user_branch", "path/to/file2.txt" ).getK1() ).isEqualTo( FILE );
+        assertThat( JGitUtil.checkPath( git, "user_branch", "path/to" ).getK1() ).isEqualTo( DIRECTORY );
     }
 
 }

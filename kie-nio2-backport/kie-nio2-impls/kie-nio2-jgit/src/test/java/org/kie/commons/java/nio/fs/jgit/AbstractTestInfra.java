@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -31,7 +32,6 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.util.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.kie.commons.java.nio.fs.jgit.JGitFileSystemProvider;
 
 import static org.kie.commons.java.nio.fs.jgit.util.JGitUtil.*;
 
@@ -42,31 +42,33 @@ public abstract class AbstractTestInfra {
     private static final List<File> tempFiles = new ArrayList<File>();
 
     protected Git setupGit() throws IOException, GitAPIException {
-        return setupGit(createTempDirectory());
+        return setupGit( createTempDirectory() );
     }
 
-    protected Git setupGit(final File tempDir) throws IOException, GitAPIException {
+    protected Git setupGit( final File tempDir ) throws IOException, GitAPIException {
 
-        final Git git = Git.init().setBare(true).setDirectory(tempDir).call();
+        final Git git = Git.init().setBare( true ).setDirectory( tempDir ).call();
 
-        commit(git, "master", "file1.txt", tempFile("content"), "name", "name@example.com", "cool1", null, null);
-        commit(git, "master", "file2.txt", tempFile("content2"), "name", "name@example.com", "cool1", null, null);
+        commit( git, "master", "name", "name@example.com", "cool1", null, null, new HashMap<String, File>() {{
+            put( "file1.txt", tempFile( "content" ) );
+            put( "file2.txt", tempFile( "content2" ) );
+        }} );
 
         return git;
     }
 
     protected static File createTempDirectory()
             throws IOException {
-        final File temp = File.createTempFile("temp", Long.toString(System.nanoTime()));
-        if (!(temp.delete())) {
-            throw new IOException("Could not delete temp file: " + temp.getAbsolutePath());
+        final File temp = File.createTempFile( "temp", Long.toString( System.nanoTime() ) );
+        if ( !( temp.delete() ) ) {
+            throw new IOException( "Could not delete temp file: " + temp.getAbsolutePath() );
         }
 
-        if (!(temp.mkdir())) {
-            throw new IOException("Could not create temp directory: " + temp.getAbsolutePath());
+        if ( !( temp.mkdir() ) ) {
+            throw new IOException( "Could not create temp directory: " + temp.getAbsolutePath() );
         }
 
-        tempFiles.add(temp);
+        tempFiles.add( temp );
 
         return temp;
     }
@@ -74,10 +76,10 @@ public abstract class AbstractTestInfra {
     @AfterClass
     @BeforeClass
     public static void cleanup() {
-        for (final File tempFile : tempFiles) {
+        for ( final File tempFile : tempFiles ) {
             try {
-                FileUtils.delete(tempFile, FileUtils.RECURSIVE);
-            } catch (IOException e) {
+                FileUtils.delete( tempFile, FileUtils.RECURSIVE );
+            } catch ( IOException e ) {
             }
         }
     }
@@ -86,18 +88,18 @@ public abstract class AbstractTestInfra {
     @BeforeClass
     public static void cleanupGit() {
         try {
-            FileUtils.delete( JGitFileSystemProvider.FILE_REPOSITORIES_ROOT, FileUtils.RECURSIVE);
-        } catch (Exception ex) {
+            FileUtils.delete( JGitFileSystemProvider.FILE_REPOSITORIES_ROOT, FileUtils.RECURSIVE );
+        } catch ( Exception ex ) {
 
         }
     }
 
-    public File tempFile(final String content) throws IOException {
-        final File file = File.createTempFile("bar", "foo");
-        final OutputStream out = new FileOutputStream(file);
+    public File tempFile( final String content ) throws IOException {
+        final File file = File.createTempFile( "bar", "foo" );
+        final OutputStream out = new FileOutputStream( file );
 
-        if (content != null && !content.isEmpty()) {
-            out.write(content.getBytes());
+        if ( content != null && !content.isEmpty() ) {
+            out.write( content.getBytes() );
             out.flush();
         }
 
@@ -106,7 +108,7 @@ public abstract class AbstractTestInfra {
     }
 
     public PersonIdent getAuthor() {
-        return new PersonIdent("user", "user@example.com");
+        return new PersonIdent( "user", "user@example.com" );
     }
 
 }

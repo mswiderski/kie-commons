@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -251,20 +252,19 @@ public final class JGitUtil {
                                final String message,
                                final TimeZone timeZone,
                                final Date when ) {
-        commit( git, branchName, path, null, name, email, message, timeZone, when );
+        commit( git, branchName, name, email, message, timeZone, when, new HashMap<String, File>() {{
+            put( path, null );
+        }} );
     }
 
     public static void commit( final Git git,
                                final String branchName,
-                               final String path,
-                               final File file,
                                final String name,
                                final String email,
                                final String message,
                                final TimeZone timeZone,
-                               final Date when ) {
-
-        final String gitPath = fixPath( path );
+                               final Date when,
+                               final Map<String, File> content ) {
 
         final PersonIdent author = buildPersonIdent( git, name, email, timeZone, when );
 
@@ -273,7 +273,7 @@ public final class JGitUtil {
             try {
                 // Create the in-memory index of the new/updated issue.
                 final ObjectId headId = git.getRepository().resolve( branchName + "^{commit}" );
-                final DirCache index = createTemporaryIndex( git, headId, gitPath, file );
+                final DirCache index = createTemporaryIndex( git, headId, content );
                 final ObjectId indexTreeId = index.writeTree( odi );
 
                 // Create a commit object
@@ -349,64 +349,69 @@ public final class JGitUtil {
      */
     private static DirCache createTemporaryIndex( final Git git,
                                                   final ObjectId headId,
-                                                  final String path,
-                                                  final File file ) {
+                                                  final Map<String, File> content ) {
 
         final DirCache inCoreIndex = DirCache.newInCore();
         final DirCacheBuilder dcBuilder = inCoreIndex.builder();
         final ObjectInserter inserter = git.getRepository().newObjectInserter();
+        boolean hadFile = false;
 
         try {
-            if ( file != null ) {
-                final DirCacheEntry dcEntry = new DirCacheEntry( path );
-                dcEntry.setLength( file.length() );
-                dcEntry.setLastModified( file.lastModified() );
-                dcEntry.setFileMode( REGULAR_FILE );
+            for ( final Map.Entry<String, File> pathAndContent : content.entrySet() ) {
+                final String gPath = fixPath( pathAndContent.getKey() );
+                if ( pathAndContent.getValue() != null ) {
+                    hadFile = true;
+                    final DirCacheEntry dcEntry = new DirCacheEntry( gPath );
+                    dcEntry.setLength( pathAndContent.getValue().length() );
+                    dcEntry.setLastModified( pathAndContent.getValue().lastModified() );
+                    dcEntry.setFileMode( REGULAR_FILE );
 
-                final InputStream inputStream = new FileInputStream( file );
-                try {
-                    dcEntry.setObjectId( inserter.insert( Constants.OBJ_BLOB, file.length(), inputStream ) );
-                } finally {
-                    inputStream.close();
-                }
-
-                dcBuilder.add( dcEntry );
-            }
-
-            if ( headId != null ) {
-                final TreeWalk treeWalk = new TreeWalk( git.getRepository() );
-                final int hIdx = treeWalk.addTree( new RevWalk( git.getRepository() ).parseTree( headId ) );
-                treeWalk.setRecursive( true );
-
-                while ( treeWalk.next() ) {
-                    final String walkPath = treeWalk.getPathString();
-                    final CanonicalTreeParser hTree = treeWalk.getTree( hIdx, CanonicalTreeParser.class );
-
-                    if ( !walkPath.equals( path ) ) {
-                        // add entries from HEAD for all other paths
-                        // create a new DirCacheEntry with data retrieved from HEAD
-                        final DirCacheEntry dcEntry = new DirCacheEntry( walkPath );
-                        dcEntry.setObjectId( hTree.getEntryObjectId() );
-                        dcEntry.setFileMode( hTree.getEntryFileMode() );
-
-                        // add to temporary in-core index
-                        dcBuilder.add( dcEntry );
+                    final InputStream inputStream = new FileInputStream( pathAndContent.getValue() );
+                    try {
+                        final ObjectId objectId = inserter.insert( Constants.OBJ_BLOB, pathAndContent.getValue().length(), inputStream );
+                        dcEntry.setObjectId( objectId );
+                    } finally {
+                        inputStream.close();
                     }
-                }
-                treeWalk.release();
-            }
 
-            dcBuilder.finish();
+                    dcBuilder.add( dcEntry );
+                }
+
+                if ( headId != null ) {
+                    final TreeWalk treeWalk = new TreeWalk( git.getRepository() );
+                    final int hIdx = treeWalk.addTree( new RevWalk( git.getRepository() ).parseTree( headId ) );
+                    treeWalk.setRecursive( true );
+
+                    while ( treeWalk.next() ) {
+                        final String walkPath = treeWalk.getPathString();
+                        final CanonicalTreeParser hTree = treeWalk.getTree( hIdx, CanonicalTreeParser.class );
+
+                        if ( !walkPath.equals( gPath ) ) {
+                            // add entries from HEAD for all other paths
+                            // create a new DirCacheEntry with data retrieved from HEAD
+                            final DirCacheEntry dcEntry = new DirCacheEntry( walkPath );
+                            dcEntry.setObjectId( hTree.getEntryObjectId() );
+                            dcEntry.setFileMode( hTree.getEntryFileMode() );
+
+                            // add to temporary in-core index
+                            dcBuilder.add( dcEntry );
+                        }
+                    }
+                    treeWalk.release();
+                }
+
+                dcBuilder.finish();
+
+                if ( !hadFile ) {
+                    final DirCacheEditor editor = inCoreIndex.editor();
+                    editor.add( new DirCacheEditor.DeleteTree( gPath ) );
+                    editor.finish();
+                }
+            }
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         } finally {
             inserter.release();
-        }
-
-        if ( file == null ) {
-            final DirCacheEditor editor = inCoreIndex.editor();
-            editor.add( new DirCacheEditor.DeleteTree( path ) );
-            editor.finish();
         }
 
         return inCoreIndex;

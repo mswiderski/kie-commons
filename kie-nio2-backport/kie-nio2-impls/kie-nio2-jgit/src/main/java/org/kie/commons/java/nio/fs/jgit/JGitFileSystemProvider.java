@@ -26,6 +26,7 @@ import java.net.URI;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +47,7 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.kie.commons.data.Pair;
 import org.kie.commons.java.nio.IOException;
 import org.kie.commons.java.nio.base.BasicFileAttributesImpl;
+import org.kie.commons.java.nio.base.SeekableByteChannelFileBasedImpl;
 import org.kie.commons.java.nio.channels.AsynchronousFileChannel;
 import org.kie.commons.java.nio.channels.SeekableByteChannel;
 import org.kie.commons.java.nio.file.AccessDeniedException;
@@ -302,7 +304,9 @@ public class JGitFileSystemProvider implements FileSystemProvider {
                         }
                     }
 
-                    commit( gPath.getFileSystem().gitRepo(), gPath.getRefTree(), gPath.getPath(), file, name, email, message, timeZone, when );
+                    commit( gPath.getFileSystem().gitRepo(), gPath.getRefTree(), name, email, message, timeZone, when, new HashMap<String, File>() {{
+                        put( gPath.getPath(), file );
+                    }} );
                 }
             };
         } catch ( java.io.IOException e ) {
@@ -332,7 +336,53 @@ public class JGitFileSystemProvider implements FileSystemProvider {
                                                final Set<? extends OpenOption> options,
                                                final FileAttribute<?>... attrs )
             throws IllegalArgumentException, UnsupportedOperationException, FileAlreadyExistsException, IOException, SecurityException {
-        throw new UnsupportedOperationException();
+
+        final JGitPathImpl gPath = toPathImpl( path );
+
+        final Pair<PathType, ObjectId> result = checkPath( gPath.getFileSystem().gitRepo(), gPath.getRefTree(), gPath.getPath() );
+
+        if ( result.getK1().equals( PathType.DIRECTORY ) ) {
+            throw new IOException();
+        }
+
+        try {
+            final File file = File.createTempFile( "gitz", "woot" );
+
+            return new SeekableByteChannelFileBasedImpl( new FileOutputStream( file ).getChannel() ) {
+                @Override
+                public void close() throws java.io.IOException {
+                    super.close();
+                    String name = null;
+                    String email = null;
+                    String message = null;
+                    TimeZone timeZone = null;
+                    Date when = null;
+
+                    if ( options != null && options.size() > 0 ) {
+                        for ( final OpenOption option : options ) {
+                            if ( option instanceof JGitOp ) {
+                                final JGitOp op = (JGitOp) option;
+                                name = op.name;
+                                email = op.email;
+                                message = op.message;
+                                timeZone = op.timeZone;
+                                when = op.when;
+                                break;
+                            }
+                        }
+                    }
+
+                    //build DOT file here if option!
+
+                    commit( gPath.getFileSystem().gitRepo(), gPath.getRefTree(), name, email, message, timeZone, when, new HashMap<String, File>() {{
+                        put( gPath.getPath(), file );
+                        //put dot if exists
+                    }} );
+                }
+            };
+        } catch ( java.io.IOException e ) {
+            throw new IOException( e );
+        }
     }
 
     @Override

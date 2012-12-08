@@ -23,7 +23,6 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
-import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Iterator;
 import java.util.Map;
@@ -35,10 +34,10 @@ import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.util.URIUtil;
 import org.apache.commons.io.FileUtils;
 import org.kie.commons.java.nio.IOException;
+import org.kie.commons.java.nio.base.SeekableByteChannelFileBasedImpl;
 import org.kie.commons.java.nio.base.BasicFileAttributesImpl;
 import org.kie.commons.java.nio.base.ExtendedAttributeView;
 import org.kie.commons.java.nio.base.GeneralPathImpl;
-import org.kie.commons.java.nio.base.NotImplementedException;
 import org.kie.commons.java.nio.channels.AsynchronousFileChannel;
 import org.kie.commons.java.nio.channels.SeekableByteChannel;
 import org.kie.commons.java.nio.file.AccessDeniedException;
@@ -211,45 +210,10 @@ public class SimpleFileSystemProvider implements FileSystemProvider {
             throw new FileAlreadyExistsException( "" );
         }
         try {
-            file.createNewFile();
-            return new SeekableByteChannel() {
-                @Override
-                public long position() throws IOException {
-                    throw new NotImplementedException();
-                }
-
-                @Override
-                public SeekableByteChannel position( long newPosition ) throws IOException {
-                    throw new NotImplementedException();
-                }
-
-                @Override
-                public long size() throws IOException {
-                    throw new NotImplementedException();
-                }
-
-                @Override
-                public SeekableByteChannel truncate( long size ) throws IOException {
-                    throw new NotImplementedException();
-                }
-
-                @Override
-                public int read( ByteBuffer dst ) throws java.io.IOException {
-                    throw new NotImplementedException();
-                }
-
-                @Override
-                public int write( ByteBuffer src ) throws java.io.IOException {
-                    throw new NotImplementedException();
-                }
-
-                @Override
-                public boolean isOpen() {
-                    return false;
-                }
-
+            return new SeekableByteChannelFileBasedImpl( new FileOutputStream( file ).getChannel() ) {
                 @Override
                 public void close() throws java.io.IOException {
+                    super.close();
                 }
             };
         } catch ( java.io.IOException e ) {
