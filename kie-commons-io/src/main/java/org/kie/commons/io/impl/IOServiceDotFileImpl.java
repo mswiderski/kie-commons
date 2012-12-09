@@ -16,11 +16,9 @@
 
 package org.kie.commons.io.impl;
 
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 
 import org.kie.commons.io.IOService;
@@ -49,14 +47,20 @@ public class IOServiceDotFileImpl
             throws IllegalArgumentException, NoSuchFileException, DirectoryNotEmptyException,
             IOException, SecurityException {
         Files.delete( path );
-        Files.delete( dot( path ) );
+        try {
+            Files.delete( dot( path ) );
+        } catch ( final Exception ex ) {
+        }
     }
 
     @Override
     public synchronized boolean deleteIfExists( final Path path )
             throws IllegalArgumentException, DirectoryNotEmptyException, IOException, SecurityException {
         final boolean result = Files.deleteIfExists( path );
-        Files.delete( dot( path ) );
+        try {
+            Files.delete( dot( path ) );
+        } catch ( final Exception ex ) {
+        }
         return result;
     }
 

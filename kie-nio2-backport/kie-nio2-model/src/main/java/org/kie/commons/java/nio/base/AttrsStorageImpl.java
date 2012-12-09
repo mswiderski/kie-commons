@@ -64,6 +64,7 @@ public class AttrsStorageImpl implements AttrsStorage {
             if ( view.getValue() instanceof ExtendedAttributeView && ( (ExtendedAttributeView) view.getValue() ).isSerializable() ) {
                 final ExtendedAttributeView extendedView = (ExtendedAttributeView) view.getValue();
                 for ( final Map.Entry<String, Object> attr : extendedView.readAllAttributes().entrySet() ) {
+                    //this maybe a problem!
                     properties.put( view.getKey() + "." + attr.getKey(), attr.getValue() );
                 }
             }
