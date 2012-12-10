@@ -22,27 +22,28 @@ import java.util.Map;
 import java.util.Set;
 
 import org.kie.commons.java.nio.IOException;
+import org.kie.commons.java.nio.file.Path;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributeView;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
 import org.kie.commons.java.nio.file.attribute.FileTime;
 
 import static org.kie.commons.validation.PortablePreconditions.*;
 
-public abstract class AbstractBasicFileAttributeView
+public abstract class AbstractBasicFileAttributeView<P extends Path>
         implements BasicFileAttributeView,
                    ExtendedAttributeView {
 
-    static final String IS_REGULAR_FILE    = "isRegularFile";
-    static final String IS_DIRECTORY       = "isDirectory";
-    static final String IS_SYMBOLIC_LINK   = "isSymbolicLink";
-    static final String IS_OTHER           = "isOther";
-    static final String SIZE               = "size";
-    static final String FILE_KEY           = "fileKey";
-    static final String LAST_MODIFIED_TIME = "lastModifiedTime";
-    static final String LAST_ACCESS_TIME   = "lastAccessTime";
-    static final String CREATION_TIME      = "creationTime";
+    private static final String IS_REGULAR_FILE    = "isRegularFile";
+    private static final String IS_DIRECTORY       = "isDirectory";
+    private static final String IS_SYMBOLIC_LINK   = "isSymbolicLink";
+    private static final String IS_OTHER           = "isOther";
+    private static final String SIZE               = "size";
+    private static final String FILE_KEY           = "fileKey";
+    private static final String LAST_MODIFIED_TIME = "lastModifiedTime";
+    private static final String LAST_ACCESS_TIME   = "lastAccessTime";
+    private static final String CREATION_TIME      = "creationTime";
 
-    static final Set<String> PROPERTIES = new HashSet<String>() {{
+    private static final Set<String> PROPERTIES = new HashSet<String>() {{
         add( IS_REGULAR_FILE );
         add( IS_DIRECTORY );
         add( IS_SYMBOLIC_LINK );
@@ -53,6 +54,12 @@ public abstract class AbstractBasicFileAttributeView
         add( LAST_ACCESS_TIME );
         add( CREATION_TIME );
     }};
+
+    protected final P path;
+
+    public AbstractBasicFileAttributeView( final P path ) {
+        this.path = checkNotNull( "path", path );
+    }
 
     @Override
     public String name() {

@@ -31,6 +31,7 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.junit.Test;
 import org.kie.commons.data.Pair;
 import org.kie.commons.java.nio.base.NotImplementedException;
+import org.kie.commons.java.nio.base.options.CommentedOption;
 import org.kie.commons.java.nio.file.DirectoryNotEmptyException;
 import org.kie.commons.java.nio.file.DirectoryStream;
 import org.kie.commons.java.nio.file.FileAlreadyExistsException;
@@ -407,7 +408,7 @@ public class JGitFileSystemProviderTest extends AbstractTestInfra {
 
         final SimpleDateFormat formatter = new SimpleDateFormat( "dd/MM/yyyy" );
 
-        final JGitOp op = new JGitOp( "User Tester", "user.tester@example.com", "omg, is it the end?", formatter.parse( "31/12/2012" ) );
+        final CommentedOption op = new CommentedOption( "User Tester", "user.tester@example.com", "omg, is it the end?", formatter.parse( "31/12/2012" ) );
 
         final Path path = PROVIDER.getPath( URI.create( "git://user_branch@outstreamwithop-test-repo/some/path/myfile.txt" ) );
 

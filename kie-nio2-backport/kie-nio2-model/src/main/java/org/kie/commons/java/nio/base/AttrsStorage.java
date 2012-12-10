@@ -16,11 +16,17 @@
 
 package org.kie.commons.java.nio.base;
 
-import java.util.Properties;
+import java.util.Map;
 
 public interface AttrsStorage extends AttrHolder {
 
     Properties toProperties();
+
+    Map<String, Object> getContent();
+
+    Map<String, Object> getAllContent();
+
+    void loadContent( final Properties properties );
 
     void clear();
 }

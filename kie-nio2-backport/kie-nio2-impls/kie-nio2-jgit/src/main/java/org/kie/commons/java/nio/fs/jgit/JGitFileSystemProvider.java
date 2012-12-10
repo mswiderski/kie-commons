@@ -22,6 +22,7 @@ import java.io.FilenameFilter;
 import java.io.FilterOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.net.URI;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
@@ -48,7 +49,10 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.kie.commons.data.Pair;
 import org.kie.commons.java.nio.IOException;
 import org.kie.commons.java.nio.base.BasicFileAttributesImpl;
+import org.kie.commons.java.nio.base.ExtendedAttributeView;
 import org.kie.commons.java.nio.base.SeekableByteChannelFileBasedImpl;
+import org.kie.commons.java.nio.base.dotfiles.DotFileOption;
+import org.kie.commons.java.nio.base.options.CommentedOption;
 import org.kie.commons.java.nio.channels.AsynchronousFileChannel;
 import org.kie.commons.java.nio.channels.SeekableByteChannel;
 import org.kie.commons.java.nio.file.AccessDeniedException;
@@ -77,6 +81,7 @@ import org.kie.commons.java.nio.fs.jgit.util.JGitUtil;
 
 import static org.eclipse.jgit.api.ListBranchCommand.ListMode.*;
 import static org.eclipse.jgit.lib.Constants.*;
+import static org.kie.commons.java.nio.base.dotfiles.DotFileUtils.*;
 import static org.kie.commons.java.nio.fs.jgit.util.JGitUtil.*;
 import static org.kie.commons.java.nio.fs.jgit.util.JGitUtil.PathType.*;
 import static org.kie.commons.validation.PortablePreconditions.*;
@@ -193,7 +198,7 @@ public class JGitFileSystemProvider implements FileSystemProvider {
         if ( !env.containsKey( GIT_DEFAULT_REMOTE_NAME ) && env.containsKey( INIT ) && env.get( INIT ).equals( Boolean.TRUE ) ) {
             try {
                 final URI initURI = URI.create( getScheme() + "://master@" + name + "/readme.md" );
-                final JGitOp op = setupOp( env );
+                final CommentedOption op = setupOp( env );
                 final OutputStream stream = newOutputStream( getPath( initURI ), op );
                 final String init = "Repository Init Content\n" +
                         "=======================\n" +
@@ -208,7 +213,7 @@ public class JGitFileSystemProvider implements FileSystemProvider {
         return fs;
     }
 
-    private JGitOp setupOp( final Map<String, ?> env ) {
+    private CommentedOption setupOp( final Map<String, ?> env ) {
         return null;
     }
 
@@ -293,13 +298,13 @@ public class JGitFileSystemProvider implements FileSystemProvider {
 
                     if ( options != null && options.length > 0 ) {
                         for ( final OpenOption option : options ) {
-                            if ( option instanceof JGitOp ) {
-                                final JGitOp op = (JGitOp) option;
-                                name = op.name;
-                                email = op.email;
-                                message = op.message;
-                                timeZone = op.timeZone;
-                                when = op.when;
+                            if ( option instanceof CommentedOption ) {
+                                final CommentedOption op = (CommentedOption) option;
+                                name = op.getName();
+                                email = op.getEmail();
+                                message = op.getMessage();
+                                timeZone = op.getTimeZone();
+                                when = op.getWhen();
                                 break;
                             }
                         }
@@ -337,8 +342,11 @@ public class JGitFileSystemProvider implements FileSystemProvider {
                                                final Set<? extends OpenOption> options,
                                                final FileAttribute<?>... attrs )
             throws IllegalArgumentException, UnsupportedOperationException, FileAlreadyExistsException, IOException, SecurityException {
-
         final JGitPathImpl gPath = toPathImpl( path );
+
+        if ( exists( path ) ) {
+            throw new FileAlreadyExistsException( path.toString() );
+        }
 
         final Pair<PathType, ObjectId> result = checkPath( gPath.getFileSystem().gitRepo(), gPath.getRefTree(), gPath.getPath() );
 
@@ -349,7 +357,7 @@ public class JGitFileSystemProvider implements FileSystemProvider {
         try {
             final File file = File.createTempFile( "gitz", "woot" );
 
-            return new SeekableByteChannelFileBasedImpl( new FileOutputStream( file ).getChannel() ) {
+            return new SeekableByteChannelFileBasedImpl( new RandomAccessFile( file, "rw" ).getChannel() ) {
                 @Override
                 public void close() throws java.io.IOException {
                     super.close();
@@ -361,29 +369,47 @@ public class JGitFileSystemProvider implements FileSystemProvider {
 
                     if ( options != null && options.size() > 0 ) {
                         for ( final OpenOption option : options ) {
-                            if ( option instanceof JGitOp ) {
-                                final JGitOp op = (JGitOp) option;
-                                name = op.name;
-                                email = op.email;
-                                message = op.message;
-                                timeZone = op.timeZone;
-                                when = op.when;
+                            if ( option instanceof CommentedOption ) {
+                                final CommentedOption op = (CommentedOption) option;
+                                name = op.getName();
+                                email = op.getEmail();
+                                message = op.getMessage();
+                                timeZone = op.getTimeZone();
+                                when = op.getWhen();
                                 break;
                             }
                         }
                     }
 
-                    //build DOT file here if option!
+                    File tempDot = null;
+                    if ( options != null && options.contains( new DotFileOption() ) ) {
+                        deleteIfExists( dot( path ) );
+                        tempDot = File.createTempFile( "meta", "dot" );
+                        buildDotFile( path, new FileOutputStream( tempDot ), attrs );
+                    }
+
+                    final File dotfile = tempDot;
 
                     commit( gPath.getFileSystem().gitRepo(), gPath.getRefTree(), name, email, message, timeZone, when, new HashMap<String, File>() {{
                         put( gPath.getPath(), file );
-                        //put dot if exists
+                        if ( dotfile != null ) {
+                            put( toPathImpl( dot( gPath ) ).getPath(), dotfile );
+                        }
                     }} );
                 }
             };
         } catch ( java.io.IOException e ) {
             throw new IOException( e );
         }
+    }
+
+    private boolean exists( final Path path ) {
+        try {
+            readAttributes( path, BasicFileAttributes.class );
+            return true;
+        } catch ( final Exception ex ) {
+        }
+        return false;
     }
 
     @Override
@@ -547,6 +573,12 @@ public class JGitFileSystemProvider implements FileSystemProvider {
         final Pair<PathType, ObjectId> result = checkPath( path.getFileSystem().gitRepo(), path.getRefTree(), path.getPath() );
 
         if ( result.getK1().equals( PathType.DIRECTORY ) ) {
+            final List<JGitPathInfo> content = listPathContent( path.getFileSystem().gitRepo(), path.getRefTree(), path.getPath() );
+            if ( content.size() == 1 && content.get( 0 ).getPath().equals( path.getPath().substring( 1 ) + "/.gitignore" ) ) {
+                delete( path.resolve( ".gitignore" ) );
+                JGitUtil.delete( path.getFileSystem().gitRepo(), path.getRefTree(), path.getPath(), null, null, "delete {" + path.getPath() + "}", null, null );
+                return;
+            }
             throw new DirectoryNotEmptyException( path.toString() );
         }
 
@@ -596,6 +628,11 @@ public class JGitFileSystemProvider implements FileSystemProvider {
         final Pair<PathType, ObjectId> result = checkPath( path.getFileSystem().gitRepo(), path.getRefTree(), path.getPath() );
 
         if ( result.getK1().equals( PathType.DIRECTORY ) ) {
+            final List<JGitPathInfo> content = listPathContent( path.getFileSystem().gitRepo(), path.getRefTree(), path.getPath() );
+            if ( content.size() == 1 && content.get( 0 ).getPath().equals( path.getPath().substring( 1 ) + "/.gitignore" ) ) {
+                delete( path.resolve( ".gitignore" ) );
+                return true;
+            }
             throw new DirectoryNotEmptyException( path.toString() );
         }
 
@@ -632,7 +669,7 @@ public class JGitFileSystemProvider implements FileSystemProvider {
             copyBranch( gSource, gTarget );
             return;
         }
-        copyAsset( gSource, gTarget );
+        copyAsset( gSource, gTarget, options );
     }
 
     private void copyBranch( final JGitPathImpl source,
@@ -648,7 +685,8 @@ public class JGitFileSystemProvider implements FileSystemProvider {
     }
 
     private void copyAsset( final JGitPathImpl source,
-                            final JGitPathImpl target ) {
+                            final JGitPathImpl target,
+                            final CopyOption... options ) {
         final Pair<PathType, ObjectId> sourceResult = checkPath( source.getFileSystem().gitRepo(), source.getRefTree(), source.getPath() );
         final Pair<PathType, ObjectId> targetResult = checkPath( target.getFileSystem().gitRepo(), target.getRefTree(), target.getPath() );
 
@@ -661,15 +699,16 @@ public class JGitFileSystemProvider implements FileSystemProvider {
         }
 
         if ( sourceResult.getK1() == DIRECTORY ) {
-            copyDirectory( source, target );
+            copyDirectory( source, target, options );
             return;
         }
 
-        copyFile( source, target );
+        copyFile( source, target, options );
     }
 
     private void copyDirectory( final JGitPathImpl source,
-                                final JGitPathImpl target ) {
+                                final JGitPathImpl target,
+                                final CopyOption... options ) {
         final List<JGitPathImpl> directories = new ArrayList<JGitPathImpl>();
         for ( final Path path : newDirectoryStream( source, null ) ) {
             final JGitPathImpl gPath = toPathImpl( path );
@@ -688,7 +727,8 @@ public class JGitFileSystemProvider implements FileSystemProvider {
     }
 
     private JGitPathImpl composePath( final JGitPathImpl directory,
-                                      final JGitPathImpl fileName ) {
+                                      final JGitPathImpl fileName,
+                                      final CopyOption... options ) {
         if ( directory.getPath().endsWith( "/" ) ) {
             return toPathImpl( getPath( URI.create( directory.toUri().toString() + fileName.toString( false ) ) ) );
         }
@@ -696,10 +736,11 @@ public class JGitFileSystemProvider implements FileSystemProvider {
     }
 
     private void copyFile( final JGitPathImpl source,
-                           final JGitPathImpl target ) {
+                           final JGitPathImpl target,
+                           final CopyOption... options ) {
 
-        final InputStream in = newInputStream( source );
-        final OutputStream out = newOutputStream( target );
+        final InputStream in = newInputStream( source, convert( options ) );
+        final OutputStream out = newOutputStream( target, convert( options ) );
 
         try {
             int count;
@@ -723,6 +764,20 @@ public class JGitFileSystemProvider implements FileSystemProvider {
                 }
             }
         }
+    }
+
+    private OpenOption[] convert( CopyOption... options ) {
+        if ( options == null || options.length == 0 ) {
+            return new OpenOption[ 0 ];
+        }
+        final List<OpenOption> newOptions = new ArrayList<OpenOption>( options.length );
+        for ( final CopyOption option : options ) {
+            if ( option instanceof OpenOption ) {
+                newOptions.add( (OpenOption) option );
+            }
+        }
+
+        return newOptions.toArray( new OpenOption[ newOptions.size() ] );
     }
 
     private void createBranch( final JGitPathImpl source,
@@ -830,11 +885,28 @@ public class JGitFileSystemProvider implements FileSystemProvider {
             throw new NoSuchFileException( path.toString() );
         }
 
-        if ( type == BasicFileAttributeView.class || type == JGitBasicFileAttributeView.class ) {
-            return (V) new JGitBasicFileAttributeView( gPath );
+        final V resultView = gPath.getAttrView( type );
+
+        if ( resultView == null && type == BasicFileAttributeView.class || type == JGitBasicFileAttributeView.class ) {
+            final V newView = (V) new JGitBasicFileAttributeView( gPath );
+            gPath.addAttrView( newView );
+            return newView;
         }
 
-        return null;
+        return resultView;
+    }
+
+    private ExtendedAttributeView getFileAttributeView( final JGitPathImpl path,
+                                                        final String name,
+                                                        final LinkOption... options ) {
+        final ExtendedAttributeView view = path.getAttrView( name );
+
+        if ( view == null && name.equals( "basic" ) ) {
+            final JGitBasicFileAttributeView newView = new JGitBasicFileAttributeView( path );
+            path.addAttrView( newView );
+            return newView;
+        }
+        return view;
     }
 
     @Override
@@ -873,7 +945,7 @@ public class JGitFileSystemProvider implements FileSystemProvider {
             throw new IllegalArgumentException( attributes );
         }
 
-        final JGitBasicFileAttributeView view = getFileAttributeView( toPathImpl( path ), s[ 0 ], options );
+        final ExtendedAttributeView view = getFileAttributeView( toPathImpl( path ), s[ 0 ], options );
         if ( view == null ) {
             throw new UnsupportedOperationException( "View '" + s[ 0 ] + "' not available" );
         }
@@ -894,7 +966,7 @@ public class JGitFileSystemProvider implements FileSystemProvider {
         if ( s[ 0 ].length() == 0 ) {
             throw new IllegalArgumentException( attribute );
         }
-        final JGitBasicFileAttributeView view = getFileAttributeView( toPathImpl( path ), s[ 0 ], options );
+        final ExtendedAttributeView view = getFileAttributeView( toPathImpl( path ), s[ 0 ], options );
         if ( view == null ) {
             throw new UnsupportedOperationException( "View '" + s[ 0 ] + "' not available" );
         }
@@ -985,15 +1057,6 @@ public class JGitFileSystemProvider implements FileSystemProvider {
             return (JGitPathImpl) path;
         }
         throw new IllegalArgumentException( "Path not supported by current provider." );
-    }
-
-    private JGitBasicFileAttributeView getFileAttributeView( final JGitPathImpl path,
-                                                             final String name,
-                                                             final LinkOption... options ) {
-        if ( name.equals( "basic" ) ) {
-            return new JGitBasicFileAttributeView( path );
-        }
-        return null;
     }
 
     private String[] split( final String attribute ) {

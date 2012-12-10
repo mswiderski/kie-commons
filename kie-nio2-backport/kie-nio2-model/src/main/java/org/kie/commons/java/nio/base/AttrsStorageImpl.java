@@ -18,14 +18,15 @@ package org.kie.commons.java.nio.base;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import org.kie.commons.java.nio.file.attribute.AttributeView;
+import org.kie.commons.java.nio.file.attribute.BasicFileAttributeView;
+
+import static java.util.Collections.*;
 
 public class AttrsStorageImpl implements AttrsStorage {
 
-    private static final String DEFAULT_ATTR = "basic";
-
+    final Properties                   content        = new Properties();
     final Map<String, AttributeView>   viewsNameIndex = new HashMap<String, AttributeView>();
     final Map<Class<?>, AttributeView> viewsTypeIndex = new HashMap<Class<?>, AttributeView>();
 
@@ -37,7 +38,14 @@ public class AttrsStorageImpl implements AttrsStorage {
     @Override
     public <V extends AttributeView> void addAttrView( final V view ) {
         viewsNameIndex.put( view.name(), view );
-        viewsTypeIndex.put( view.getClass(), view );
+        if ( view instanceof ExtendedAttributeView ) {
+            final ExtendedAttributeView extendedView = (ExtendedAttributeView) view;
+            for ( Class<? extends BasicFileAttributeView> type : extendedView.viewTypes() ) {
+                viewsTypeIndex.put( type, view );
+            }
+        } else {
+            viewsTypeIndex.put( view.getClass(), view );
+        }
     }
 
     @Override
@@ -54,18 +62,41 @@ public class AttrsStorageImpl implements AttrsStorage {
     public void clear() {
         viewsNameIndex.clear();
         viewsTypeIndex.clear();
+        content.clear();
     }
 
     @Override
     public Properties toProperties() {
-        final Properties properties = new Properties();
+        return buildProperties( false );
+    }
+
+    @Override
+    public void loadContent( final Properties properties ) {
+        content.clear();
+        for ( final Map.Entry<String, Object> attr : properties.entrySet() ) {
+            content.put( attr.getKey(), attr.getValue() );
+        }
+    }
+
+    @Override
+    public Map<String, Object> getContent() {
+        return unmodifiableMap( buildProperties( false ) );
+    }
+
+    @Override
+    public Map<String, Object> getAllContent() {
+        return unmodifiableMap( buildProperties( true ) );
+    }
+
+    private synchronized Properties buildProperties( boolean includesNonSerializable ) {
+        final Properties properties = new Properties( content );
 
         for ( final Map.Entry<String, AttributeView> view : viewsNameIndex.entrySet() ) {
-            if ( view.getValue() instanceof ExtendedAttributeView && ( (ExtendedAttributeView) view.getValue() ).isSerializable() ) {
+            if ( includesNonSerializable ||
+                    view.getValue() instanceof ExtendedAttributeView && ( (ExtendedAttributeView) view.getValue() ).isSerializable() ) {
                 final ExtendedAttributeView extendedView = (ExtendedAttributeView) view.getValue();
                 for ( final Map.Entry<String, Object> attr : extendedView.readAllAttributes().entrySet() ) {
-                    //this maybe a problem!
-                    properties.put( view.getKey() + "." + attr.getKey(), attr.getValue() );
+                    properties.put( attr.getKey(), attr.getValue() );
                 }
             }
         }

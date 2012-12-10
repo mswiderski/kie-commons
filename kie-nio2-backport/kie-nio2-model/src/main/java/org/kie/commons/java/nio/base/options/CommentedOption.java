@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.kie.commons.io.options;
+package org.kie.commons.java.nio.base.options;
 
 import java.util.Date;
 import java.util.TimeZone;
@@ -26,11 +26,11 @@ public class CommentedOption
         implements OpenOption,
                    CopyOption {
 
-    String   name     = null;
-    String   email    = null;
-    String   message  = null;
-    Date     when     = null;
-    TimeZone timeZone = null;
+    private final String   name;
+    private final String   email;
+    private final String   message;
+    private final Date     when;
+    private final TimeZone timeZone;
 
     public CommentedOption( final String name ) {
         this( name, null, null, null, null );
@@ -64,5 +64,25 @@ public class CommentedOption
         this.message = message;
         this.when = when;
         this.timeZone = timeZone;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public Date getWhen() {
+        return when;
+    }
+
+    public TimeZone getTimeZone() {
+        return timeZone;
     }
 }

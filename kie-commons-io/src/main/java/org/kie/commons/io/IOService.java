@@ -41,7 +41,6 @@ import org.kie.commons.java.nio.file.NotDirectoryException;
 import org.kie.commons.java.nio.file.OpenOption;
 import org.kie.commons.java.nio.file.Path;
 import org.kie.commons.java.nio.file.ProviderNotFoundException;
-import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
 import org.kie.commons.java.nio.file.attribute.FileAttribute;
 import org.kie.commons.java.nio.file.attribute.FileAttributeView;
 import org.kie.commons.java.nio.file.attribute.FileTime;
@@ -180,11 +179,6 @@ public interface IOService {
     <V extends FileAttributeView> V getFileAttributeView( final Path path,
                                                           final Class<V> type )
             throws IllegalArgumentException;
-
-    <A extends BasicFileAttributes> A readAttributes( final Path path,
-                                                      final Class<A> type )
-            throws IllegalArgumentException, NoSuchFileException,
-            UnsupportedOperationException, IOException, SecurityException;
 
     Map<String, Object> readAttributes( final Path path )
             throws UnsupportedOperationException, NoSuchFileException,

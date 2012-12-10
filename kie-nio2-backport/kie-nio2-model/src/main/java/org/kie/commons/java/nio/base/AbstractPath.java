@@ -37,6 +37,7 @@ import org.kie.commons.java.nio.file.Path;
 import org.kie.commons.java.nio.file.WatchKey;
 import org.kie.commons.java.nio.file.WatchService;
 import org.kie.commons.java.nio.file.attribute.AttributeView;
+import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
 
 import static org.kie.commons.data.Pair.*;
 import static org.kie.commons.java.nio.file.WatchEvent.*;

@@ -21,10 +21,11 @@ import java.io.BufferedWriter;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -51,10 +52,15 @@ import org.kie.commons.java.nio.file.OpenOption;
 import org.kie.commons.java.nio.file.Path;
 import org.kie.commons.java.nio.file.Paths;
 import org.kie.commons.java.nio.file.ProviderNotFoundException;
+import org.kie.commons.java.nio.file.StandardOpenOption;
 import org.kie.commons.java.nio.file.attribute.FileAttribute;
 import org.kie.commons.java.nio.file.attribute.FileTime;
 
+import static org.kie.commons.java.nio.file.StandardOpenOption.*;
+
 public abstract class AbstractIOService implements IOService {
+
+    private static final Set<StandardOpenOption> CREATE_NEW_FILE_OPTIONS = EnumSet.of( CREATE_NEW, WRITE );
 
     protected static final Charset        UTF_8           = Charset.forName( "UTF-8" );
     public static final    FileSystemType DEFAULT_FS_TYPE = new FileSystemType() {
@@ -271,13 +277,6 @@ public abstract class AbstractIOService implements IOService {
     }
 
     @Override
-    public synchronized Path setAttributes( final Path path,
-                                            final FileAttribute<?>... attrs )
-            throws UnsupportedOperationException, IllegalArgumentException, ClassCastException, IOException, SecurityException {
-        return write( path, readAllBytes( path ), Collections.<OpenOption>emptySet(), attrs );
-    }
-
-    @Override
     public long size( final Path path )
             throws IllegalArgumentException, IOException, SecurityException {
         return Files.size( path );
@@ -300,6 +299,21 @@ public abstract class AbstractIOService implements IOService {
                                final Path path2 )
             throws IllegalArgumentException, IOException, SecurityException {
         return Files.isSameFile( path, path2 );
+    }
+
+    @Override
+    public synchronized Path createFile( final Path path,
+                                         final FileAttribute<?>... attrs )
+            throws IllegalArgumentException, UnsupportedOperationException, FileAlreadyExistsException,
+            IOException, SecurityException {
+
+        try {
+            newByteChannel( path, CREATE_NEW_FILE_OPTIONS, attrs ).close();
+        } catch ( java.io.IOException e ) {
+            throw new IOException( e );
+        }
+
+        return path;
     }
 
     @Override
@@ -424,6 +438,7 @@ public abstract class AbstractIOService implements IOService {
         return write( path, content, cs, new HashSet<OpenOption>( Arrays.asList( options ) ), convert( attrs ) );
     }
 
+    @Override
     public FileAttribute<?>[] convert( final Map<String, ?> attrs ) {
 
         if ( attrs == null || attrs.size() == 0 ) {
@@ -477,5 +492,30 @@ public abstract class AbstractIOService implements IOService {
 
         return write( path, content.getBytes( cs ), options, attrs );
     }
+
+    @Override
+    public synchronized Path write( final Path path,
+                                    final byte[] bytes,
+                                    final Set<? extends OpenOption> options,
+                                    final FileAttribute<?>... attrs ) throws IllegalArgumentException, IOException, UnsupportedOperationException {
+        SeekableByteChannel byteChannel;
+        try {
+            byteChannel = newByteChannel( path, buildOptions( options ), attrs );
+        } catch ( final FileAlreadyExistsException ex ) {
+            Files.delete( path );
+            byteChannel = newByteChannel( path, buildOptions( options ), attrs );
+        }
+
+        try {
+            byteChannel.write( ByteBuffer.wrap( bytes ) );
+            byteChannel.close();
+        } catch ( final java.io.IOException e ) {
+            throw new IOException( e );
+        }
+
+        return path;
+    }
+
+    protected abstract Set<? extends OpenOption> buildOptions( final Set<? extends OpenOption> options );
 
 }

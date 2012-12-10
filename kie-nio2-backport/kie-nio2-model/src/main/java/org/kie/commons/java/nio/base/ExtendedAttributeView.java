@@ -20,11 +20,12 @@ import java.util.Map;
 
 import org.kie.commons.java.nio.IOException;
 import org.kie.commons.java.nio.file.attribute.AttributeView;
+import org.kie.commons.java.nio.file.attribute.BasicFileAttributeView;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
 
 public interface ExtendedAttributeView extends AttributeView {
 
-    <T extends BasicFileAttributes> BasicFileAttributes readAttributes() throws IOException;
+    <T extends BasicFileAttributes> T readAttributes() throws IOException;
 
     Map<String, Object> readAllAttributes() throws IOException;
 
@@ -32,6 +33,8 @@ public interface ExtendedAttributeView extends AttributeView {
 
     void setAttribute( final String attribute,
                        final Object value ) throws IOException;
+
+    Class[] viewTypes();
 
     boolean isSerializable();
 }

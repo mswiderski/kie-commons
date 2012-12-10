@@ -20,7 +20,9 @@ import org.kie.commons.java.nio.IOException;
 
 public interface BasicFileAttributeView extends FileAttributeView {
 
-    <T extends BasicFileAttributes> BasicFileAttributes readAttributes() throws IOException;
+    <T extends BasicFileAttributes> T readAttributes() throws IOException;
 
-    void setTimes(FileTime lastModifiedTime, FileTime lastAccessTime, FileTime createTime) throws IOException;
+    void setTimes( final FileTime lastModifiedTime,
+                   final FileTime lastAccessTime,
+                   final FileTime createTime ) throws IOException;
 }

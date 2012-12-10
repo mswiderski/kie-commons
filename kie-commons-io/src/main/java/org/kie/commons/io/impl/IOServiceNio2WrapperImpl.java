@@ -16,7 +16,6 @@
 
 package org.kie.commons.io.impl;
 
-import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,7 +30,6 @@ import org.kie.commons.java.nio.file.Files;
 import org.kie.commons.java.nio.file.NoSuchFileException;
 import org.kie.commons.java.nio.file.OpenOption;
 import org.kie.commons.java.nio.file.Path;
-import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
 import org.kie.commons.java.nio.file.attribute.FileAttribute;
 import org.kie.commons.java.nio.file.attribute.FileAttributeView;
 
@@ -58,14 +56,6 @@ public class IOServiceNio2WrapperImpl
                                                final FileAttribute<?>... attrs )
             throws IllegalArgumentException, UnsupportedOperationException, FileAlreadyExistsException, IOException, SecurityException {
         return Files.newByteChannel( path, options, attrs );
-    }
-
-    @Override
-    public Path createFile( final Path path,
-                            final FileAttribute<?>... attrs )
-            throws IllegalArgumentException, UnsupportedOperationException, FileAlreadyExistsException,
-            IOException, SecurityException {
-        return Files.createFile( path, attrs );
     }
 
     @Override
@@ -110,14 +100,6 @@ public class IOServiceNio2WrapperImpl
     }
 
     @Override
-    public <A extends BasicFileAttributes> A readAttributes( final Path path,
-                                                             final Class<A> type )
-            throws IllegalArgumentException, NoSuchFileException, UnsupportedOperationException,
-            IOException, SecurityException {
-        return Files.readAttributes( path, type );
-    }
-
-    @Override
     public Map<String, Object> readAttributes( final Path path,
                                                final String attributes )
             throws UnsupportedOperationException, NoSuchFileException, IllegalArgumentException,
@@ -153,19 +135,7 @@ public class IOServiceNio2WrapperImpl
     }
 
     @Override
-    public Path write( final Path path,
-                       final byte[] bytes,
-                       final Set<? extends OpenOption> options,
-                       final FileAttribute<?>... attrs ) throws IllegalArgumentException, IOException, UnsupportedOperationException {
-        final SeekableByteChannel byteChannel = Files.newByteChannel( path, options, attrs );
-
-        try {
-            byteChannel.write( ByteBuffer.wrap( bytes ) );
-            byteChannel.close();
-        } catch ( final java.io.IOException e ) {
-            throw new IOException( e );
-        }
-
-        return path;
+    protected Set<? extends OpenOption> buildOptions( final Set<? extends OpenOption> options ) {
+        return options;
     }
 }

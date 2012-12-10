@@ -24,27 +24,25 @@ import org.kie.commons.java.nio.base.BasicFileAttributesImpl;
 import org.kie.commons.java.nio.base.FileTimeImpl;
 import org.kie.commons.java.nio.base.LazyAttrLoader;
 import org.kie.commons.java.nio.file.Path;
+import org.kie.commons.java.nio.file.attribute.BasicFileAttributeView;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
-
-import static org.kie.commons.validation.PortablePreconditions.*;
 
 /**
  *
  */
-public class SimpleBasicFileAttributeView extends AbstractBasicFileAttributeView {
+public class SimpleBasicFileAttributeView extends AbstractBasicFileAttributeView<Path> {
 
-    private final Path path;
     private BasicFileAttributes attrs = null;
 
     public SimpleBasicFileAttributeView( final Path path ) {
-        this.path = checkNotNull( "path", path );
+        super( path );
     }
 
     @Override
     public <T extends BasicFileAttributes> T readAttributes() throws IOException {
         if ( attrs == null ) {
             final File file = path.toFile();
-            this.attrs = new BasicFileAttributesImpl( null, new FileTimeImpl( file.lastModified() ), null, null, new LazyAttrLoader<Long>() {
+            this.attrs = new BasicFileAttributesImpl( path.toString(), new FileTimeImpl( file.lastModified() ), null, null, new LazyAttrLoader<Long>() {
                 private Long size = null;
 
                 @Override
@@ -58,5 +56,10 @@ public class SimpleBasicFileAttributeView extends AbstractBasicFileAttributeView
             }, file.isFile(), file.isDirectory() );
         }
         return (T) attrs;
+    }
+
+    @Override
+    public Class<? extends BasicFileAttributeView>[] viewTypes() {
+        return new Class[]{ BasicFileAttributeView.class, SimpleBasicFileAttributeView.class };
     }
 }

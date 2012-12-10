@@ -22,6 +22,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.net.URI;
 import java.nio.channels.FileChannel;
 import java.util.Iterator;
@@ -34,10 +35,10 @@ import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.util.URIUtil;
 import org.apache.commons.io.FileUtils;
 import org.kie.commons.java.nio.IOException;
-import org.kie.commons.java.nio.base.SeekableByteChannelFileBasedImpl;
 import org.kie.commons.java.nio.base.BasicFileAttributesImpl;
 import org.kie.commons.java.nio.base.ExtendedAttributeView;
 import org.kie.commons.java.nio.base.GeneralPathImpl;
+import org.kie.commons.java.nio.base.SeekableByteChannelFileBasedImpl;
 import org.kie.commons.java.nio.channels.AsynchronousFileChannel;
 import org.kie.commons.java.nio.channels.SeekableByteChannel;
 import org.kie.commons.java.nio.file.AccessDeniedException;
@@ -57,7 +58,6 @@ import org.kie.commons.java.nio.file.NotDirectoryException;
 import org.kie.commons.java.nio.file.NotLinkException;
 import org.kie.commons.java.nio.file.OpenOption;
 import org.kie.commons.java.nio.file.Path;
-import org.kie.commons.java.nio.file.attribute.AttributeView;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributeView;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
 import org.kie.commons.java.nio.file.attribute.FileAttribute;
@@ -177,7 +177,7 @@ public class SimpleFileSystemProvider implements FileSystemProvider {
         try {
             return new FileOutputStream( path.toFile() );
         } catch ( Exception e ) {
-            throw new IOException();
+            throw new IOException( e );
         }
     }
 
@@ -210,7 +210,7 @@ public class SimpleFileSystemProvider implements FileSystemProvider {
             throw new FileAlreadyExistsException( "" );
         }
         try {
-            return new SeekableByteChannelFileBasedImpl( new FileOutputStream( file ).getChannel() ) {
+            return new SeekableByteChannelFileBasedImpl( new RandomAccessFile( file, "rw" ).getChannel() ) {
                 @Override
                 public void close() throws java.io.IOException {
                     super.close();
@@ -474,17 +474,28 @@ public class SimpleFileSystemProvider implements FileSystemProvider {
 
         final V view = gPath.getAttrView( type );
 
-        if ( view != null ) {
-            return view;
-        }
-
-        if ( type == BasicFileAttributeView.class || type == SimpleBasicFileAttributeView.class ) {
+        if ( view == null && type == BasicFileAttributeView.class || type == SimpleBasicFileAttributeView.class ) {
             final V newView = (V) new SimpleBasicFileAttributeView( gPath );
             gPath.addAttrView( newView );
             return newView;
         }
 
-        return null;
+        return view;
+    }
+
+    private ExtendedAttributeView getFileAttributeView( final Path path,
+                                                        final String name,
+                                                        final LinkOption... options ) {
+        final GeneralPathImpl gPath = toGeneralPathImpl( path );
+
+        final ExtendedAttributeView view = gPath.getAttrView( name );
+
+        if ( view == null && name.equals( "basic" ) ) {
+            final SimpleBasicFileAttributeView newView = new SimpleBasicFileAttributeView( gPath );
+            gPath.addAttrView( newView );
+            return newView;
+        }
+        return view;
     }
 
     @Override
@@ -611,29 +622,6 @@ public class SimpleFileSystemProvider implements FileSystemProvider {
             return (GeneralPathImpl) path;
         }
         return GeneralPathImpl.create( fileSystem, path.toString(), false );
-    }
-
-    private ExtendedAttributeView getFileAttributeView( final Path path,
-                                                        final String name,
-                                                        final LinkOption... options ) {
-        if ( name.equals( "basic" ) ) {
-
-            final GeneralPathImpl gPath = toGeneralPathImpl( path );
-
-            final AttributeView view = gPath.getAttrView( name );
-
-            if ( view == null ) {
-                final SimpleBasicFileAttributeView newView = new SimpleBasicFileAttributeView( gPath );
-                gPath.addAttrView( newView );
-                return newView;
-            }
-
-            if ( view instanceof ExtendedAttributeView ) {
-                return (ExtendedAttributeView) view;
-            }
-        }
-
-        return null;
     }
 
     private String[] split( final String attribute ) {

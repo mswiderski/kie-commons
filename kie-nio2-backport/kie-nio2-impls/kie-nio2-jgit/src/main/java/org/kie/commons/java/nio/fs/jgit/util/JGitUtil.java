@@ -25,9 +25,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 
 import org.eclipse.jgit.api.Git;
@@ -79,6 +81,7 @@ import org.kie.commons.java.nio.base.BasicFileAttributesImpl;
 import org.kie.commons.java.nio.base.FileTimeImpl;
 import org.kie.commons.java.nio.file.NoSuchFileException;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
+import org.kie.commons.java.nio.file.attribute.FileTime;
 
 import static java.util.Collections.*;
 import static org.eclipse.jgit.api.MergeResult.*;
@@ -355,10 +358,12 @@ public final class JGitUtil {
         final DirCacheBuilder dcBuilder = inCoreIndex.builder();
         final ObjectInserter inserter = git.getRepository().newObjectInserter();
         boolean hadFile = false;
+        final Set<String> paths = new HashSet<String>( content.size() );
 
         try {
             for ( final Map.Entry<String, File> pathAndContent : content.entrySet() ) {
                 final String gPath = fixPath( pathAndContent.getKey() );
+                paths.add( gPath );
                 if ( pathAndContent.getValue() != null ) {
                     hadFile = true;
                     final DirCacheEntry dcEntry = new DirCacheEntry( gPath );
@@ -377,37 +382,38 @@ public final class JGitUtil {
                     dcBuilder.add( dcEntry );
                 }
 
-                if ( headId != null ) {
-                    final TreeWalk treeWalk = new TreeWalk( git.getRepository() );
-                    final int hIdx = treeWalk.addTree( new RevWalk( git.getRepository() ).parseTree( headId ) );
-                    treeWalk.setRecursive( true );
-
-                    while ( treeWalk.next() ) {
-                        final String walkPath = treeWalk.getPathString();
-                        final CanonicalTreeParser hTree = treeWalk.getTree( hIdx, CanonicalTreeParser.class );
-
-                        if ( !walkPath.equals( gPath ) ) {
-                            // add entries from HEAD for all other paths
-                            // create a new DirCacheEntry with data retrieved from HEAD
-                            final DirCacheEntry dcEntry = new DirCacheEntry( walkPath );
-                            dcEntry.setObjectId( hTree.getEntryObjectId() );
-                            dcEntry.setFileMode( hTree.getEntryFileMode() );
-
-                            // add to temporary in-core index
-                            dcBuilder.add( dcEntry );
-                        }
-                    }
-                    treeWalk.release();
-                }
-
-                dcBuilder.finish();
-
                 if ( !hadFile ) {
                     final DirCacheEditor editor = inCoreIndex.editor();
                     editor.add( new DirCacheEditor.DeleteTree( gPath ) );
                     editor.finish();
                 }
             }
+
+            if ( headId != null ) {
+                final TreeWalk treeWalk = new TreeWalk( git.getRepository() );
+                final int hIdx = treeWalk.addTree( new RevWalk( git.getRepository() ).parseTree( headId ) );
+                treeWalk.setRecursive( true );
+
+                while ( treeWalk.next() ) {
+                    final String walkPath = treeWalk.getPathString();
+                    final CanonicalTreeParser hTree = treeWalk.getTree( hIdx, CanonicalTreeParser.class );
+
+                    if ( !paths.contains( walkPath ) ) {
+                        // add entries from HEAD for all other paths
+                        // create a new DirCacheEntry with data retrieved from HEAD
+                        final DirCacheEntry dcEntry = new DirCacheEntry( walkPath );
+                        dcEntry.setObjectId( hTree.getEntryObjectId() );
+                        dcEntry.setFileMode( hTree.getEntryFileMode() );
+
+                        // add to temporary in-core index
+                        dcBuilder.add( dcEntry );
+                    }
+                }
+                treeWalk.release();
+            }
+
+            dcBuilder.finish();
+
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         } finally {
@@ -441,8 +447,8 @@ public final class JGitUtil {
                                                                 final String branchName,
                                                                 final String path ) {
 
-        long createDate = Long.MAX_VALUE;
-        long lastModified = Long.MIN_VALUE;
+        FileTime olastModified = null;
+        FileTime ocreateDate = null;
 
         final JGitPathInfo pathInfo = resolvePath( git, branchName, path );
 
@@ -452,25 +458,34 @@ public final class JGitUtil {
 
         final String gPath = fixPath( path );
 
-        try {
-            final LogCommand logCommand = git.log().add( getBranch( git, branchName ).getObjectId() );
-            if ( !gPath.isEmpty() ) {
-                logCommand.addPath( gPath );
-            }
+        final Ref branchRef = getBranch( git, branchName );
 
-            for ( final RevCommit commit : logCommand.call() ) {
-                if ( commit.getAuthorIdent().getWhen().getTime() < createDate ) {
-                    createDate = commit.getAuthorIdent().getWhen().getTime();
+        if ( branchRef != null ) {
+            long createDate = Long.MAX_VALUE;
+            long lastModified = Long.MIN_VALUE;
+
+            try {
+                final LogCommand logCommand = git.log().add( branchRef.getObjectId() );
+                if ( !gPath.isEmpty() ) {
+                    logCommand.addPath( gPath );
                 }
-                if ( commit.getAuthorIdent().getWhen().getTime() > lastModified ) {
-                    lastModified = commit.getAuthorIdent().getWhen().getTime();
+
+                for ( final RevCommit commit : logCommand.call() ) {
+                    if ( commit.getAuthorIdent().getWhen().getTime() < createDate ) {
+                        createDate = commit.getAuthorIdent().getWhen().getTime();
+                    }
+                    if ( commit.getAuthorIdent().getWhen().getTime() > lastModified ) {
+                        lastModified = commit.getAuthorIdent().getWhen().getTime();
+                    }
                 }
+                olastModified = new FileTimeImpl( lastModified );
+                ocreateDate = new FileTimeImpl( createDate );
+            } catch ( Exception e ) {
+                throw new RuntimeException( e );
             }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
         }
 
-        return new BasicFileAttributesImpl( pathInfo.getObjectId() == null ? null : pathInfo.getObjectId().toString(), new FileTimeImpl( lastModified ), new FileTimeImpl( createDate ), null, pathInfo.getSize(), pathInfo.getPathType().equals( PathType.FILE ), pathInfo.getPathType().equals( PathType.DIRECTORY ) );
+        return new BasicFileAttributesImpl( pathInfo.getObjectId() == null ? null : pathInfo.getObjectId().toString(), olastModified, ocreateDate, null, pathInfo.getSize(), pathInfo.getPathType().equals( PathType.FILE ), pathInfo.getPathType().equals( PathType.DIRECTORY ) );
     }
 
     public static void createBranch( final Git git,

@@ -18,22 +18,19 @@ package org.kie.commons.java.nio.fs.jgit;
 
 import org.kie.commons.java.nio.IOException;
 import org.kie.commons.java.nio.base.AbstractBasicFileAttributeView;
+import org.kie.commons.java.nio.file.attribute.BasicFileAttributeView;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
 import org.kie.commons.java.nio.fs.jgit.util.JGitUtil;
-
-import static org.kie.commons.validation.PortablePreconditions.*;
 
 /**
  *
  */
-public class JGitBasicFileAttributeView extends AbstractBasicFileAttributeView {
-
-    private final JGitPathImpl path;
+public class JGitBasicFileAttributeView extends AbstractBasicFileAttributeView<JGitPathImpl> {
 
     private BasicFileAttributes attrs = null;
 
     public JGitBasicFileAttributeView( final JGitPathImpl path ) {
-        this.path = checkNotNull( "path", path );
+        super( path );
     }
 
     @Override
@@ -42,5 +39,10 @@ public class JGitBasicFileAttributeView extends AbstractBasicFileAttributeView {
             attrs = JGitUtil.buildBasicFileAttributes( path.getFileSystem().gitRepo(), path.getRefTree(), path.getPath() );
         }
         return (T) attrs;
+    }
+
+    @Override
+    public Class<? extends BasicFileAttributeView>[] viewTypes() {
+        return new Class[]{ BasicFileAttributeView.class, JGitBasicFileAttributeView.class };
     }
 }
