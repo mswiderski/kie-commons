@@ -40,7 +40,6 @@ import org.kie.commons.java.nio.file.attribute.AttributeView;
 
 import static org.kie.commons.data.Pair.*;
 import static org.kie.commons.java.nio.file.WatchEvent.*;
-import static org.kie.commons.validation.PortablePreconditions.checkNotNull;
 import static org.kie.commons.validation.Preconditions.*;
 
 public abstract class AbstractPath<FS extends FileSystem> implements Path,
@@ -322,25 +321,127 @@ public abstract class AbstractPath<FS extends FileSystem> implements Path,
     @Override
     public boolean startsWith( final Path other ) {
         checkNotNull( "other", other );
-        throw new UnsupportedOperationException();
+
+        if ( !( other instanceof AbstractPath ) ) {
+            return false;
+        }
+
+        final AbstractPath<?> that = (AbstractPath) other;
+
+        if ( that.path.length > path.length ) {
+            return false;
+        }
+
+        int thisOffsetCount = getNameCount();
+        int thatOffsetCount = that.getNameCount();
+
+        if ( thatOffsetCount > thisOffsetCount ) {
+            return false;
+        }
+
+        if ( ( thatOffsetCount == thisOffsetCount ) &&
+                ( path.length != that.path.length ) ) {
+            return false;
+        }
+
+        for ( int i = 0; i < thatOffsetCount; i++ ) {
+            final Pair<Integer, Integer> o1 = offsets.get( i );
+            final Pair<Integer, Integer> o2 = that.offsets.get( i );
+            if ( !o1.equals( o2 ) ) {
+                return false;
+            }
+        }
+
+        int i = 0;
+        while ( i < that.path.length ) {
+            if ( this.path[ i ] != that.path[ i ] ) {
+                return false;
+            }
+            i++;
+        }
+
+        if ( i < path.length && this.path[ i ] != fs.getSeparator().charAt( 0 ) ) {
+            return false;
+        }
+
+        return true;
     }
 
     @Override
     public boolean startsWith( final String other ) throws InvalidPathException {
         checkNotNull( "other", other );
-        throw new UnsupportedOperationException();
+        return startsWith( getFileSystem().getPath( other ) );
     }
 
     @Override
     public boolean endsWith( final Path other ) {
         checkNotNull( "other", other );
-        throw new UnsupportedOperationException();
+
+        if ( !( other instanceof AbstractPath ) ) {
+            return false;
+        }
+
+        final AbstractPath<?> that = (AbstractPath) other;
+
+        int thisLen = path.length;
+        int thatLen = that.path.length;
+
+        if ( thatLen > thisLen ) {
+            return false;
+        }
+
+        if ( thisLen > 0 && thatLen == 0 ) {
+            return false;
+        }
+
+        if ( that.isAbsolute() && !this.isAbsolute() ) {
+            return false;
+        }
+
+        int thisOffsetCount = getNameCount();
+        int thatOffsetCount = that.getNameCount();
+
+        if ( thatOffsetCount > thisOffsetCount ) {
+            return false;
+        } else {
+            if ( thatOffsetCount == thisOffsetCount ) {
+                if ( thisOffsetCount == 0 ) {
+                    return true;
+                }
+                int expectedLen = thisLen;
+                if ( this.isAbsolute() && !that.isAbsolute() ) {
+                    expectedLen--;
+                }
+                if ( thatLen != expectedLen ) {
+                    return false;
+                }
+            } else {
+                if ( that.isAbsolute() ) {
+                    return false;
+                }
+            }
+        }
+
+        int thisPos = offsets.get( thisOffsetCount - thatOffsetCount ).getK1();
+        int thatPos = that.offsets.get( 0 ).getK1();
+
+        if ( ( thatLen - thatPos ) != ( thisLen - thisPos ) ) {
+            return false;
+        }
+
+        while ( thatPos < thatLen ) {
+            if ( this.path[ thisPos++ ] != that.path[ thatPos++ ] ) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     @Override
     public boolean endsWith( final String other ) throws InvalidPathException {
         checkNotNull( "other", other );
-        throw new UnsupportedOperationException();
+        return endsWith( getFileSystem().getPath( other ) );
     }
 
     @Override
