@@ -25,7 +25,7 @@ import org.kie.commons.java.nio.base.GeneralPathImpl;
 import org.kie.commons.java.nio.file.FileSystem;
 import org.kie.commons.java.nio.file.Path;
 
-import static org.kie.commons.validation.PortablePreconditions.*;
+import static org.kie.commons.validation.Preconditions.*;
 
 public class SimpleWindowsFileStore extends BaseSimpleFileStore {
 

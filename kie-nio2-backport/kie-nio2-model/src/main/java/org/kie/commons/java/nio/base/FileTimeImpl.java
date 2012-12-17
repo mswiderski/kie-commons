@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.kie.commons.java.nio.file.attribute.FileTime;
 
-import static org.kie.commons.validation.PortablePreconditions.*;
+import static org.kie.commons.validation.Preconditions.*;
 
 public class FileTimeImpl implements FileTime {
 

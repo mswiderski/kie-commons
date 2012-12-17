@@ -42,7 +42,7 @@ import org.kie.commons.java.nio.file.attribute.FileAttributeView;
 
 import static org.kie.commons.java.nio.base.dotfiles.DotFileUtils.*;
 import static org.kie.commons.java.nio.file.StandardCopyOption.*;
-import static org.kie.commons.validation.PortablePreconditions.*;
+import static org.kie.commons.validation.Preconditions.*;
 
 public class IOServiceDotFileImpl
         extends AbstractIOService
@@ -76,6 +76,7 @@ public class IOServiceDotFileImpl
                                                             final FileAttribute<?>... attrs )
             throws IllegalArgumentException, UnsupportedOperationException,
             FileAlreadyExistsException, IOException, SecurityException {
+        checkNotNull( "path", path );
 
         final Properties properties = new Properties();
         if ( exists( dot( path ) ) ) {
@@ -168,6 +169,7 @@ public class IOServiceDotFileImpl
             IOException, SecurityException {
         checkNotNull( "path", path );
         checkNotEmpty( "attributes", attributes );
+
         final Properties original = new Properties( Files.readAttributes( path, attributes ) );
         if ( attributes.equals( "*" ) && exists( dot( path ) ) ) {
             boolean isAttrHolder = path instanceof AttrHolder;
@@ -209,6 +211,7 @@ public class IOServiceDotFileImpl
     public synchronized Path setAttributes( final Path path,
                                             final FileAttribute<?>... attrs )
             throws UnsupportedOperationException, IllegalArgumentException, ClassCastException, IOException, SecurityException {
+        checkNotNull( "path", path );
         if ( Files.isDirectory( path ) ) {
             return internalCreateDirectory( path, true, attrs );
         }
@@ -219,6 +222,7 @@ public class IOServiceDotFileImpl
     public Object getAttribute( final Path path,
                                 final String attribute )
             throws UnsupportedOperationException, IllegalArgumentException, IOException, SecurityException {
+        checkNotNull( "path", path );
 
         Object value;
         try {
@@ -294,6 +298,8 @@ public class IOServiceDotFileImpl
                                                        final FileAttribute<?>... attrs )
             throws IllegalArgumentException, UnsupportedOperationException, FileAlreadyExistsException,
             IOException, SecurityException {
+        checkNotNull( "dir", dir );
+
         FileAttribute<?>[] allAttrs = attrs;
         try {
             Files.createDirectory( dir, attrs );

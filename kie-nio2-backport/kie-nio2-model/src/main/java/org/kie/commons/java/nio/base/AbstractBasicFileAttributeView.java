@@ -27,7 +27,7 @@ import org.kie.commons.java.nio.file.attribute.BasicFileAttributeView;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
 import org.kie.commons.java.nio.file.attribute.FileTime;
 
-import static org.kie.commons.validation.PortablePreconditions.*;
+import static org.kie.commons.validation.Preconditions.*;
 
 public abstract class AbstractBasicFileAttributeView<P extends Path>
         implements BasicFileAttributeView,

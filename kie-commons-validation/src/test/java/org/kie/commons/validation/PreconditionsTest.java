@@ -20,7 +20,7 @@ import org.junit.Test;
 
 import static org.hamcrest.core.Is.*;
 import static org.junit.Assert.*;
-import static org.kie.commons.validation.PortablePreconditions.*;
+import static org.kie.commons.validation.Preconditions.*;
 
 /**
  * Test class for {@link Preconditions}

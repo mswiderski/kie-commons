@@ -19,7 +19,7 @@ package org.kie.commons.java.nio.file;
 import org.kie.commons.java.nio.IOException;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
 
-import static org.kie.commons.validation.PortablePreconditions.*;
+import static org.kie.commons.validation.Preconditions.*;
 
 /**
  * Simple file tree walker that works in a similar manner to nftw(3C).

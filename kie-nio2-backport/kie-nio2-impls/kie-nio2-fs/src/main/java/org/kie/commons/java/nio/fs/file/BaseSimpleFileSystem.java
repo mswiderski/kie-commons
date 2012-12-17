@@ -32,7 +32,7 @@ import org.kie.commons.java.nio.file.WatchService;
 import org.kie.commons.java.nio.file.attribute.UserPrincipalLookupService;
 import org.kie.commons.java.nio.file.spi.FileSystemProvider;
 
-import static org.kie.commons.validation.PortablePreconditions.*;
+import static org.kie.commons.validation.Preconditions.*;
 
 public abstract class BaseSimpleFileSystem implements FileSystem {
 

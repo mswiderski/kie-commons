@@ -25,7 +25,7 @@ import org.kie.commons.java.nio.file.attribute.BasicFileAttributeView;
 import org.kie.commons.java.nio.file.attribute.FileAttributeView;
 import org.kie.commons.java.nio.file.attribute.FileStoreAttributeView;
 
-import static org.kie.commons.validation.PortablePreconditions.*;
+import static org.kie.commons.validation.Preconditions.*;
 
 public abstract class BaseSimpleFileStore implements FileStore {
 

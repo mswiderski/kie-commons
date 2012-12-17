@@ -64,7 +64,7 @@ import org.kie.commons.java.nio.file.attribute.FileAttribute;
 import org.kie.commons.java.nio.file.attribute.FileAttributeView;
 import org.kie.commons.java.nio.file.spi.FileSystemProvider;
 
-import static org.kie.commons.validation.PortablePreconditions.*;
+import static org.kie.commons.validation.Preconditions.*;
 
 public class SimpleFileSystemProvider implements FileSystemProvider {
 

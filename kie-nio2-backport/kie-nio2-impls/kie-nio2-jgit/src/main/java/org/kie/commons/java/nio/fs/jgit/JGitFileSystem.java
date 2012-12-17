@@ -39,7 +39,7 @@ import org.kie.commons.java.nio.file.spi.FileSystemProvider;
 
 import static org.eclipse.jgit.lib.Repository.*;
 import static org.kie.commons.java.nio.fs.jgit.util.JGitUtil.*;
-import static org.kie.commons.validation.PortablePreconditions.*;
+import static org.kie.commons.validation.Preconditions.*;
 
 public class JGitFileSystem implements FileSystem {
 

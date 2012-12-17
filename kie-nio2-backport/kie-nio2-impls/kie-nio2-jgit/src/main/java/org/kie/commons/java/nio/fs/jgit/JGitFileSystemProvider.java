@@ -84,7 +84,7 @@ import static org.eclipse.jgit.lib.Constants.*;
 import static org.kie.commons.java.nio.base.dotfiles.DotFileUtils.*;
 import static org.kie.commons.java.nio.fs.jgit.util.JGitUtil.*;
 import static org.kie.commons.java.nio.fs.jgit.util.JGitUtil.PathType.*;
-import static org.kie.commons.validation.PortablePreconditions.*;
+import static org.kie.commons.validation.Preconditions.*;
 
 public class JGitFileSystemProvider implements FileSystemProvider {
 

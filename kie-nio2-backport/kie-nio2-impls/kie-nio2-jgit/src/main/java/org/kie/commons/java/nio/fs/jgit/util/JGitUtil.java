@@ -91,7 +91,7 @@ import static org.eclipse.jgit.lib.FileMode.*;
 import static org.eclipse.jgit.treewalk.filter.PathFilterGroup.*;
 import static org.eclipse.jgit.util.FS.*;
 import static org.kie.commons.data.Pair.*;
-import static org.kie.commons.validation.PortablePreconditions.*;
+import static org.kie.commons.validation.Preconditions.*;
 
 public final class JGitUtil {
 
