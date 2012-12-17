@@ -1,0 +1,209 @@
+/*
+ * Copyright 2012 JBoss Inc
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.kie.kieora.backend.lucene;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
+
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StringField;
+import org.kie.kieora.engine.MetaIndexEngine;
+import org.kie.kieora.engine.MetaModelStore;
+import org.kie.kieora.model.KObject;
+import org.kie.kieora.model.KObjectKey;
+import org.kie.kieora.model.KProperty;
+import org.kie.kieora.model.schema.MetaObject;
+import org.kie.kieora.model.schema.MetaProperty;
+import org.kie.kieora.model.schema.MetaType;
+
+import static org.kie.commons.validation.Preconditions.*;
+
+public class LuceneIndexEngine implements MetaIndexEngine {
+
+    private final LuceneSetup    lucene;
+    private final FieldFactory   fieldFactory;
+    private final MetaModelStore metaModelStore;
+
+    public LuceneIndexEngine( final MetaModelStore metaModelStore,
+                              final LuceneSetup lucene,
+                              final FieldFactory fieldFactory ) {
+        this.metaModelStore = checkNotNull( "metaModelStore", metaModelStore );
+        this.lucene = checkNotNull( "lucene", lucene );
+        this.fieldFactory = checkNotNull( "fieldFactory", fieldFactory );
+    }
+
+    @Override
+    public void index( final KObject object ) {
+        updateMetaModel( object );
+
+        lucene.indexDocument( object.getId(), newDocument( object ) );
+    }
+
+    private Document newDocument( final KObject object ) {
+        final Document doc = new Document();
+
+        doc.add( new StringField( "id", object.getKey(), Field.Store.YES ) );
+        doc.add( new StringField( "type", object.getType().getName(), Field.Store.YES ) );
+
+        for ( final KProperty<?> property : object.getProperties() ) {
+            doc.add( fieldFactory.build( property ) );
+        }
+
+        return doc;
+    }
+
+    @Override
+    public void index( final KObject... objects ) {
+        for ( final KObject object : objects ) {
+            index( object );
+        }
+    }
+
+    @Override
+    public void rename( final KObjectKey from,
+                        final KObjectKey to ) {
+        lucene.rename( from.getId(), to.getId() );
+    }
+
+    @Override
+    public void delete( final KObjectKey objectKey ) {
+        lucene.deleteIfExists( objectKey.getId() );
+    }
+
+    @Override
+    public void delete( final KObjectKey... objectsKey ) {
+        final String[] ids = new String[ objectsKey.length ];
+        for ( int i = 0; i < ids.length; i++ ) {
+            ids[ i ] = objectsKey[ i ].getId();
+        }
+        lucene.deleteIfExists( ids );
+    }
+
+    private void updateMetaModel( final KObject object ) {
+        final MetaObject metaObject = metaModelStore.getMetaObject( object.getType().getName() );
+        if ( metaObject == null ) {
+            metaModelStore.add( newMetaObect( object ) );
+        } else {
+            for ( final KProperty property : object.getProperties() ) {
+                final MetaProperty metaProperty = metaObject.getProperty( property.getName() );
+                if ( metaProperty == null ) {
+                    metaObject.addProperty( newMetaProperty( property ) );
+                } else {
+                    metaProperty.addType( property.getValue().getClass() );
+                    if ( property.isSearchable() ) {
+                        metaProperty.setAsSearchable();
+                    }
+                }
+            }
+            metaModelStore.update( metaObject );
+        }
+    }
+
+    private MetaObject newMetaObect( final KObject object ) {
+        final Set<MetaProperty> properties = new HashSet<MetaProperty>();
+        for ( final KProperty<?> property : object.getProperties() ) {
+            properties.add( newMetaProperty( property ) );
+        }
+
+        return new MetaObject() {
+
+            private final Map<String, MetaProperty> propertyMap = new ConcurrentHashMap<String, MetaProperty>() {{
+                for ( final MetaProperty property : properties ) {
+                    put( property.getName(), property );
+                }
+            }};
+
+            @Override
+            public MetaType getType() {
+                return object.getType();
+            }
+
+            @Override
+            public Collection<MetaProperty> getProperties() {
+                return propertyMap.values();
+            }
+
+            @Override
+            public MetaProperty getProperty( final String name ) {
+                return propertyMap.get( name );
+            }
+
+            @Override
+            public void addProperty( final MetaProperty metaProperty ) {
+                if ( !propertyMap.containsKey( metaProperty.getName() ) ) {
+                    propertyMap.put( metaProperty.getName(), metaProperty );
+                }
+            }
+        };
+    }
+
+    private MetaProperty newMetaProperty( final KProperty<?> property ) {
+        return new MetaProperty() {
+
+            private boolean isSearchable = property.isSearchable();
+            private Set<Class<?>> types = new CopyOnWriteArraySet<Class<?>>() {{
+                add( property.getValue().getClass() );
+            }};
+
+            @Override
+            public String getName() {
+                return property.getName();
+            }
+
+            @Override
+            public Set<Class<?>> getTypes() {
+                return types;
+            }
+
+            @Override
+            public boolean isSearchable() {
+                return isSearchable;
+            }
+
+            @Override
+            public void setAsSearchable() {
+                this.isSearchable = true;
+            }
+
+            @Override
+            public void addType( final Class<?> type ) {
+                types.add( type );
+            }
+
+            @Override
+            public boolean equals( final Object obj ) {
+                if ( obj == null ) {
+                    return false;
+                }
+                if ( !( obj instanceof MetaProperty ) ) {
+                    return false;
+                }
+                return ( (MetaProperty) obj ).getName().equals( getName() );
+            }
+
+            @Override
+            public int hashCode() {
+                return getName().hashCode();
+            }
+        };
+    }
+}
