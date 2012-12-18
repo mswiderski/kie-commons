@@ -16,9 +16,6 @@
 
 package org.kie.kieora.io;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Set;
 
 import org.kie.commons.io.impl.IOServiceDotFileImpl;
@@ -35,10 +32,6 @@ import org.kie.commons.java.nio.file.OpenOption;
 import org.kie.commons.java.nio.file.Path;
 import org.kie.commons.java.nio.file.attribute.FileAttribute;
 import org.kie.kieora.engine.MetaIndexEngine;
-import org.kie.kieora.model.KObject;
-import org.kie.kieora.model.KObjectKey;
-import org.kie.kieora.model.KProperty;
-import org.kie.kieora.model.schema.MetaType;
 
 import static org.kie.commons.java.nio.base.dotfiles.DotFileUtils.*;
 import static org.kie.commons.validation.Preconditions.*;
@@ -108,7 +101,9 @@ public class IOServiceIndexedImpl extends IOServiceDotFileImpl {
         }
         final FileAttribute<?>[] allAttrs = consolidate( properties, attrs );
 
-        indexEngine.index( toKObject( dir, allAttrs ) );
+        if ( allAttrs.length > 0 ) {
+            indexEngine.index( toKObject( dir, allAttrs ) );
+        }
 
         return result;
     }
@@ -171,7 +166,5 @@ public class IOServiceIndexedImpl extends IOServiceDotFileImpl {
 
         return dir;
     }
-
-
 
 }

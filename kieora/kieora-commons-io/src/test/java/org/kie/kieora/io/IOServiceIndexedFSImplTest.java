@@ -191,7 +191,7 @@ public class IOServiceIndexedFSImplTest extends SimpleFSIOServiceDotFileTest {
 
             final ScoreDoc[] hits = collector.topDocs().scoreDocs;
 
-            assertEquals( 3, hits.length );
+            assertEquals( 2, hits.length );
         }
 
         luceneSetup.nrtRelease( searcher );

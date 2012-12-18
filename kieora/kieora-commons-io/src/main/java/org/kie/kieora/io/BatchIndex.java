@@ -60,8 +60,28 @@ public final class BatchIndex {
 
                 return FileVisitResult.CONTINUE;
             }
+
+            @Override
+            public FileVisitResult preVisitDirectory( final Path dir,
+                                                      final BasicFileAttributes attrs )
+                    throws IOException {
+                checkNotNull( "dir", dir );
+                checkNotNull( "attrs", attrs );
+
+                if ( Files.exists( dot( dir ) ) ) {
+                    final Properties properties = new Properties();
+                    properties.load( Files.newInputStream( dot( dir ) ) );
+                    indexEngine.index( toKObject( dir, consolidate( properties ) ) );
+                }
+
+                return FileVisitResult.CONTINUE;
+            }
+
         } );
 
+    }
+
+    public void dispose() {
         indexEngine.dispose();
     }
 
