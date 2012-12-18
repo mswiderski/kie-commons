@@ -42,25 +42,9 @@ import org.kie.kieora.model.schema.MetaType;
 
 import static org.kie.commons.java.nio.base.dotfiles.DotFileUtils.*;
 import static org.kie.commons.validation.Preconditions.*;
+import static org.kie.kieora.io.KObjectUtil.*;
 
 public class IOServiceIndexedImpl extends IOServiceDotFileImpl {
-
-    private static final MessageDigest DIGEST;
-
-    static {
-        try {
-            DIGEST = MessageDigest.getInstance( "SHA1" );
-        } catch ( final NoSuchAlgorithmException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    private static final MetaType META_TYPE = new MetaType() {
-        @Override
-        public String getName() {
-            return Path.class.getName();
-        }
-    };
 
     private final MetaIndexEngine indexEngine;
 
@@ -188,77 +172,6 @@ public class IOServiceIndexedImpl extends IOServiceDotFileImpl {
         return dir;
     }
 
-    private KObjectKey toKObjectKey( final Path path ) {
-        return new KObjectKey() {
-            @Override
-            public String getId() {
-                return sha1( getType().getName() + "|" + getKey() );
-            }
 
-            @Override
-            public MetaType getType() {
-                return META_TYPE;
-            }
-
-            @Override
-            public String getKey() {
-                return path.toString();
-            }
-        };
-    }
-
-    private KObject toKObject( final Path path,
-                               final FileAttribute<?>... attrs ) {
-        return new KObject() {
-            @Override
-            public String getId() {
-                return sha1( getType().getName() + "|" + getKey() );
-            }
-
-            @Override
-            public MetaType getType() {
-                return META_TYPE;
-            }
-
-            @Override
-            public String getKey() {
-                return path.toString();
-            }
-
-            @Override
-            public Iterable<KProperty<?>> getProperties() {
-                return new ArrayList<KProperty<?>>( attrs.length ) {{
-                    for ( final FileAttribute<?> attr : attrs ) {
-                        add( new KProperty<Object>() {
-                            @Override
-                            public String getName() {
-                                return attr.name();
-                            }
-
-                            @Override
-                            public Object getValue() {
-                                return attr.value();
-                            }
-
-                            @Override
-                            public boolean isSearchable() {
-                                return true;
-                            }
-                        } );
-                    }
-                }};
-            }
-        };
-    }
-
-    private static String sha1( final String input ) {
-        byte[] result = DIGEST.digest( input.getBytes() );
-        final StringBuffer sb = new StringBuffer();
-        for ( int i = 0; i < result.length; i++ ) {
-            sb.append( Integer.toString( ( result[ i ] & 0xff ) + 0x100, 16 ).substring( 1 ) );
-        }
-
-        return sb.toString();
-    }
 
 }

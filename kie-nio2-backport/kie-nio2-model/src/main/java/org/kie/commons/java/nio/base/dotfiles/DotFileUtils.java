@@ -51,7 +51,7 @@ public final class DotFileUtils {
     }
 
     public static FileAttribute<?>[] consolidate( final Map<String, Object> props,
-                                                  final FileAttribute<?>[] attrs ) {
+                                                  final FileAttribute<?>... attrs ) {
         if ( props == null || props.size() == 0 ) {
             return attrs;
         }

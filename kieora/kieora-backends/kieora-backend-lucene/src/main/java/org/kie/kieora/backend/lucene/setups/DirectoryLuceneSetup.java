@@ -93,4 +93,15 @@ public class DirectoryLuceneSetup extends BaseLuceneSetup {
     public Analyzer getAnalyzer() {
         return analyzer;
     }
+
+    @Override
+    public void dispose() {
+        try {
+            writer.close();
+            analyzer.close();
+            directory.close();
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
 }

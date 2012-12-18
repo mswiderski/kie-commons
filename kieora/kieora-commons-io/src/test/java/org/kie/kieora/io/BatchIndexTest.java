@@ -14,24 +14,11 @@
  * limitations under the License.
  */
 
-package org.kie.kieora.engine;
+package org.kie.kieora.io;
 
-import org.kie.kieora.model.KObject;
-import org.kie.kieora.model.KObjectKey;
-import org.kie.kieora.model.schema.MetaObject;
+/**
+ *
+ */
+public class BatchIndexTest {
 
-public interface MetaIndexEngine {
-
-    void index( final KObject object );
-
-    void index( final KObject... objects );
-
-    void rename( final KObjectKey from,
-                 final KObjectKey to );
-
-    void delete( final KObjectKey objectKey );
-
-    void delete( final KObjectKey... objectsKey );
-
-    void dispose();
 }

@@ -281,17 +281,6 @@ public abstract class AbstractPath<FS extends FileSystem> implements Path,
     }
 
     @Override
-    public File toFile()
-            throws UnsupportedOperationException {
-        if ( file == null ) {
-            synchronized ( this ) {
-                file = new File( toString() );
-            }
-        }
-        return file;
-    }
-
-    @Override
     public Iterator<Path> iterator() {
         return new Iterator<Path>() {
             private int i = 0;

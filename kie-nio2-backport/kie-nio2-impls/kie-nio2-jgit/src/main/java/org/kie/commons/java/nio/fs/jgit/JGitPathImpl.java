@@ -17,16 +17,22 @@
 package org.kie.commons.java.nio.fs.jgit;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import org.eclipse.jgit.lib.ObjectId;
+import org.kie.commons.java.nio.IOException;
 import org.kie.commons.java.nio.base.AbstractPath;
 import org.kie.commons.java.nio.file.Path;
+import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
 
 import static org.eclipse.jgit.lib.Constants.*;
 
 public class JGitPathImpl extends AbstractPath<JGitFileSystem> {
 
-    public final static String DEFAULT_REF_TREE = MASTER;
+    private static final int    BUFFER_SIZE      = 8192;
+    public final static  String DEFAULT_REF_TREE = MASTER;
 
     private final ObjectId objectId;
 
@@ -114,7 +120,25 @@ public class JGitPathImpl extends AbstractPath<JGitFileSystem> {
     @Override
     public File toFile()
             throws UnsupportedOperationException {
-        throw new UnsupportedOperationException();
+        if ( file == null ) {
+            synchronized ( this ) {
+                if ( isRegularFile() ) {
+                    try {
+                        file = File.createTempFile( "git", "temp" );
+                        final InputStream in = getFileSystem().provider().newInputStream( this );
+                        final OutputStream out = new FileOutputStream( file );
+                        internalCopy( in, out );
+                        in.close();
+                        out.close();
+                    } catch ( final Exception ex ) {
+                        file = null;
+                    }
+                } else {
+                    throw new UnsupportedOperationException();
+                }
+            }
+        }
+        return file;
     }
 
     private static String setupHost( final String host ) {
@@ -138,6 +162,31 @@ public class JGitPathImpl extends AbstractPath<JGitFileSystem> {
 
     public String getPath() {
         return new String( path );
+    }
+
+    public boolean isRegularFile()
+            throws IllegalAccessError, SecurityException {
+        try {
+            return getFileSystem().provider().readAttributes( this, BasicFileAttributes.class ).isRegularFile();
+        } catch ( IOException ioe ) {
+        }
+        return false;
+    }
+
+    private static long internalCopy( InputStream in,
+                                      OutputStream out ) {
+        long read = 0L;
+        byte[] buf = new byte[ BUFFER_SIZE ];
+        int n;
+        try {
+            while ( ( n = in.read( buf ) ) > 0 ) {
+                out.write( buf, 0, n );
+                read += n;
+            }
+        } catch ( java.io.IOException e ) {
+            throw new IOException( e );
+        }
+        return read;
     }
 
 }

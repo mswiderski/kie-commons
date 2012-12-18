@@ -126,6 +126,8 @@ public class JGitFileSystemProviderTest extends AbstractTestInfra {
 
         assertThat( fs.getRootDirectories() ).hasSize( 2 );
 
+        assertThat( fs.getPath( "file.txt" ).toFile() ).isNotNull().exists();
+
         commit( origin, "XmasterX", "user1", "user1@example.com", "commitx", null, null, new HashMap<String, File>() {{
             put( "fileXXXXX.txt", tempFile( "temp" ) );
         }} );

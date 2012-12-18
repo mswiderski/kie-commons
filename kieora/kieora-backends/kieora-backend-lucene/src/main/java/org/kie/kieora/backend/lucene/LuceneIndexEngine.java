@@ -100,6 +100,12 @@ public class LuceneIndexEngine implements MetaIndexEngine {
         lucene.deleteIfExists( ids );
     }
 
+    @Override
+    public void dispose() {
+        metaModelStore.dispose();
+        lucene.dispose();
+    }
+
     private void updateMetaModel( final KObject object ) {
         final MetaObject metaObject = metaModelStore.getMetaObject( object.getType().getName() );
         if ( metaObject == null ) {

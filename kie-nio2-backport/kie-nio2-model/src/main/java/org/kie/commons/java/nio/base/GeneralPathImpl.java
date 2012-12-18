@@ -138,4 +138,15 @@ public class GeneralPathImpl extends AbstractPath<FileSystem> {
                             final boolean isNormalized ) {
         return new GeneralPathImpl( fs, substring, false, isRealPath, isNormalized );
     }
+
+    @Override
+    public File toFile()
+            throws UnsupportedOperationException {
+        if ( file == null ) {
+            synchronized ( this ) {
+                file = new File( toString() );
+            }
+        }
+        return file;
+    }
 }

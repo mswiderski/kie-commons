@@ -34,4 +34,5 @@ public interface LuceneSetup {
     void rename( final String source,
                  final String target );
 
+    void dispose();
 }
