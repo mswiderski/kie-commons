@@ -16,18 +16,22 @@
 
 package org.kie.kieora.backend.lucene;
 
+import org.kie.kieora.backend.lucene.metamodels.InMemoryMetaModelStore;
 import org.kie.kieora.backend.lucene.setups.BaseLuceneSetup;
 import org.kie.kieora.backend.lucene.setups.RAMLuceneSetup;
+import org.kie.kieora.engine.MetaModelStore;
 
 /**
  *
  */
-public class InMemoryLuceneSetupTest extends BaseLuceneSetupTest {
+public class InMemoryIndexEngineSimpleTest extends BaseIndexEngineSimpleTest {
 
-    private final RAMLuceneSetup luceneSetup;
+    private final RAMLuceneSetup         luceneSetup;
+    private final InMemoryMetaModelStore metaModelStore;
 
-    public InMemoryLuceneSetupTest() {
+    public InMemoryIndexEngineSimpleTest() {
         this.luceneSetup = new RAMLuceneSetup();
+        this.metaModelStore = new InMemoryMetaModelStore();
     }
 
     @Override
@@ -35,4 +39,8 @@ public class InMemoryLuceneSetupTest extends BaseLuceneSetupTest {
         return luceneSetup;
     }
 
+    @Override
+    protected MetaModelStore getMetaModelStore() {
+        return metaModelStore;
+    }
 }

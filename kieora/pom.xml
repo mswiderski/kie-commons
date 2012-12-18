@@ -15,5 +15,6 @@
   <modules>
     <module>kieora-api</module>
     <module>kieora-backends</module>
+    <module>kieora-commons-io</module>
   </modules>
 </project>

@@ -6,16 +6,16 @@ import java.util.HashSet;
 
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.NumericRangeQuery;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopScoreDocCollector;
 import org.junit.Test;
 import org.kie.kieora.backend.lucene.fields.SimpleFieldFactory;
-import org.kie.kieora.backend.lucene.metamodels.InMemoryMetaModelStore;
 import org.kie.kieora.backend.lucene.setups.BaseLuceneSetup;
-import org.kie.kieora.backend.lucene.setups.RAMLuceneSetup;
 import org.kie.kieora.engine.MetaIndexEngine;
+import org.kie.kieora.engine.MetaModelStore;
 import org.kie.kieora.model.KObject;
 import org.kie.kieora.model.KObjectKey;
 import org.kie.kieora.model.KProperty;
@@ -26,16 +26,13 @@ import static org.junit.Assert.*;
 /**
  *
  */
-public class IndexEngineSimpleTest {
+public abstract class BaseIndexEngineSimpleTest {
 
     @Test
     public void testSimpleIndex() throws IOException {
 
-        final InMemoryMetaModelStore metaModel = new InMemoryMetaModelStore();
-        final BaseLuceneSetup luceneSetup = new RAMLuceneSetup();
         final FieldFactory factory = new SimpleFieldFactory();
-
-        final MetaIndexEngine engine = new LuceneIndexEngine( metaModel, luceneSetup, factory );
+        final MetaIndexEngine engine = new LuceneIndexEngine( getMetaModelStore(), getLuceneSetup(), factory );
 
         engine.index( new KObject() {
             @Override
@@ -55,7 +52,7 @@ public class IndexEngineSimpleTest {
 
             @Override
             public String getKey() {
-                return "unique.id.here";
+                return "some.key.here";
             }
 
             @Override
@@ -130,14 +127,14 @@ public class IndexEngineSimpleTest {
             }
         } );
 
-        assertNotNull( metaModel.getMetaObject( "Path" ) );
+        assertNotNull( getMetaModelStore().getMetaObject( "Path" ) );
 
-        assertNotNull( metaModel.getMetaObject( "Path" ).getProperty( "dcore.author" ) );
-        assertNotNull( metaModel.getMetaObject( "Path" ).getProperty( "dcore.comment" ) );
-        assertNotNull( metaModel.getMetaObject( "Path" ).getProperty( "dcore.review" ) );
-        assertNotNull( metaModel.getMetaObject( "Path" ).getProperty( "dcore.lastModifiedTime" ) );
+        assertNotNull( getMetaModelStore().getMetaObject( "Path" ).getProperty( "dcore.author" ) );
+        assertNotNull( getMetaModelStore().getMetaObject( "Path" ).getProperty( "dcore.comment" ) );
+        assertNotNull( getMetaModelStore().getMetaObject( "Path" ).getProperty( "dcore.review" ) );
+        assertNotNull( getMetaModelStore().getMetaObject( "Path" ).getProperty( "dcore.lastModifiedTime" ) );
 
-        final IndexSearcher searcher = luceneSetup.nrtSearcher();
+        final IndexSearcher searcher = getLuceneSetup().nrtSearcher();
 
         {
             final TopScoreDocCollector collector = TopScoreDocCollector.create( 10, true );
@@ -203,7 +200,7 @@ public class IndexEngineSimpleTest {
             assertEquals( 1, hits.length );
         }
 
-        luceneSetup.nrtRelease( searcher );
+        getLuceneSetup().nrtRelease( searcher );
 
         engine.rename( new KObjectKey() {
                            @Override
@@ -223,7 +220,7 @@ public class IndexEngineSimpleTest {
 
                            @Override
                            public String getKey() {
-                               return "unique.id.here";
+                               return "some.key.here";
                            }
                        }, new KObjectKey() {
                            @Override
@@ -243,12 +240,22 @@ public class IndexEngineSimpleTest {
 
                            @Override
                            public String getKey() {
-                               return "some.other.id.here";
+                               return "some.key.here";
                            }
                        }
                      );
 
-        final IndexSearcher updatedSearcher = luceneSetup.nrtSearcher();
+        final IndexSearcher updatedSearcher = getLuceneSetup().nrtSearcher();
+
+        {
+            final TopScoreDocCollector collector = TopScoreDocCollector.create( 10, true );
+
+            updatedSearcher.search( new MatchAllDocsQuery(), collector );
+
+            final ScoreDoc[] hits = collector.topDocs().scoreDocs;
+
+            assertEquals( 1, hits.length );
+        }
 
         {
             final TopScoreDocCollector collector = TopScoreDocCollector.create( 10, true );
@@ -288,7 +295,7 @@ public class IndexEngineSimpleTest {
 
             @Override
             public String getKey() {
-                return "some.other.id.here";
+                return "some.key.here";
             }
         } );
 
@@ -302,9 +309,9 @@ public class IndexEngineSimpleTest {
             assertEquals( 1, hits.length );
         }
 
-        luceneSetup.nrtRelease( updatedSearcher );
+        getLuceneSetup().nrtRelease( updatedSearcher );
 
-        final IndexSearcher deletedSearcher = luceneSetup.nrtSearcher();
+        final IndexSearcher deletedSearcher = getLuceneSetup().nrtSearcher();
 
         {
             final TopScoreDocCollector collector = TopScoreDocCollector.create( 10, true );
@@ -316,8 +323,12 @@ public class IndexEngineSimpleTest {
             assertEquals( 0, hits.length );
         }
 
-        luceneSetup.nrtRelease( deletedSearcher );
+        getLuceneSetup().nrtRelease( deletedSearcher );
 
     }
+
+    protected abstract BaseLuceneSetup getLuceneSetup();
+
+    protected abstract MetaModelStore getMetaModelStore();
 
 }

@@ -22,9 +22,8 @@ import java.util.HashSet;
 
 import org.junit.Test;
 import org.kie.kieora.backend.lucene.fields.SimpleFieldFactory;
-import org.kie.kieora.backend.lucene.metamodels.InMemoryMetaModelStore;
-import org.kie.kieora.backend.lucene.setups.RAMLuceneSetup;
 import org.kie.kieora.engine.MetaIndexEngine;
+import org.kie.kieora.engine.MetaModelStore;
 import org.kie.kieora.model.KObject;
 import org.kie.kieora.model.KProperty;
 import org.kie.kieora.model.schema.MetaType;
@@ -34,16 +33,13 @@ import static org.junit.Assert.*;
 /**
  *
  */
-public class IndexEngineMetaModelTest {
+public abstract class BaseIndexEngineMetaModelTest {
 
     @Test
     public void testSimpleIndex() throws IOException {
-
-        final InMemoryMetaModelStore metaModel = new InMemoryMetaModelStore();
-        final LuceneSetup luceneSetup = new RAMLuceneSetup();
         final FieldFactory factory = new SimpleFieldFactory();
 
-        final MetaIndexEngine engine = new LuceneIndexEngine( metaModel, luceneSetup, factory );
+        final MetaIndexEngine engine = new LuceneIndexEngine( getMetaModelStore(), getLuceneSetup(), factory );
 
         engine.index( new KObject() {
             @Override
@@ -63,7 +59,7 @@ public class IndexEngineMetaModelTest {
 
             @Override
             public String getKey() {
-                return "unique.id.here";
+                return "some.key.here";
             }
 
             @Override
@@ -105,12 +101,12 @@ public class IndexEngineMetaModelTest {
             }
         } );
 
-        assertNotNull( metaModel.getMetaObject( "Path" ) );
+        assertNotNull( getMetaModelStore().getMetaObject( "Path" ) );
 
-        assertNotNull( metaModel.getMetaObject( "Path" ).getProperty( "dcore.author" ) );
-        assertNotNull( metaModel.getMetaObject( "Path" ).getProperty( "dcore.comment" ) );
-        assertNull( metaModel.getMetaObject( "Path" ).getProperty( "dcore.review" ) );
-        assertNull( metaModel.getMetaObject( "Path" ).getProperty( "dcore.lastModifiedTime" ) );
+        assertNotNull( getMetaModelStore().getMetaObject( "Path" ).getProperty( "dcore.author" ) );
+        assertNotNull( getMetaModelStore().getMetaObject( "Path" ).getProperty( "dcore.comment" ) );
+        assertNull( getMetaModelStore().getMetaObject( "Path" ).getProperty( "dcore.review" ) );
+        assertNull( getMetaModelStore().getMetaObject( "Path" ).getProperty( "dcore.lastModifiedTime" ) );
 
         engine.index( new KObject() {
             @Override
@@ -130,7 +126,7 @@ public class IndexEngineMetaModelTest {
 
             @Override
             public String getKey() {
-                return "unique.id.here";
+                return "some.key.here";
             }
 
             @Override
@@ -204,10 +200,10 @@ public class IndexEngineMetaModelTest {
             }
         } );
 
-        assertNotNull( metaModel.getMetaObject( "Path" ).getProperty( "dcore.author" ) );
-        assertNotNull( metaModel.getMetaObject( "Path" ).getProperty( "dcore.comment" ) );
-        assertNotNull( metaModel.getMetaObject( "Path" ).getProperty( "dcore.review" ) );
-        assertNotNull( metaModel.getMetaObject( "Path" ).getProperty( "dcore.lastModifiedTime" ) );
+        assertNotNull( getMetaModelStore().getMetaObject( "Path" ).getProperty( "dcore.author" ) );
+        assertNotNull( getMetaModelStore().getMetaObject( "Path" ).getProperty( "dcore.comment" ) );
+        assertNotNull( getMetaModelStore().getMetaObject( "Path" ).getProperty( "dcore.review" ) );
+        assertNotNull( getMetaModelStore().getMetaObject( "Path" ).getProperty( "dcore.lastModifiedTime" ) );
 
         engine.index( new KObject() {
             @Override
@@ -227,7 +223,7 @@ public class IndexEngineMetaModelTest {
 
             @Override
             public String getKey() {
-                return "some.id.here";
+                return "some.key.here";
             }
 
             @Override
@@ -269,17 +265,21 @@ public class IndexEngineMetaModelTest {
             }
         } );
 
-        assertNotNull( metaModel.getMetaObject( "Path" ) );
+        assertNotNull( getMetaModelStore().getMetaObject( "Path" ) );
 
-        assertNotNull( metaModel.getMetaObject( "Path" ).getProperty( "dcore.author" ) );
-        assertNotNull( metaModel.getMetaObject( "Path" ).getProperty( "dcore.comment" ) );
-        assertNotNull( metaModel.getMetaObject( "Path" ).getProperty( "dcore.review" ) );
-        assertNotNull( metaModel.getMetaObject( "Path" ).getProperty( "dcore.lastModifiedTime" ) );
+        assertNotNull( getMetaModelStore().getMetaObject( "Path" ).getProperty( "dcore.author" ) );
+        assertNotNull( getMetaModelStore().getMetaObject( "Path" ).getProperty( "dcore.comment" ) );
+        assertNotNull( getMetaModelStore().getMetaObject( "Path" ).getProperty( "dcore.review" ) );
+        assertNotNull( getMetaModelStore().getMetaObject( "Path" ).getProperty( "dcore.lastModifiedTime" ) );
 
-        assertNotNull( metaModel.getMetaObject( "PathX" ) );
+        assertNotNull( getMetaModelStore().getMetaObject( "PathX" ) );
 
-        assertNotNull( metaModel.getMetaObject( "PathX" ).getProperty( "dcore.author" ) );
-        assertNotNull( metaModel.getMetaObject( "PathX" ).getProperty( "dcore.lastModifiedTime" ) );
+        assertNotNull( getMetaModelStore().getMetaObject( "PathX" ).getProperty( "dcore.author" ) );
+        assertNotNull( getMetaModelStore().getMetaObject( "PathX" ).getProperty( "dcore.lastModifiedTime" ) );
     }
+
+    protected abstract LuceneSetup getLuceneSetup();
+
+    protected abstract MetaModelStore getMetaModelStore();
 
 }

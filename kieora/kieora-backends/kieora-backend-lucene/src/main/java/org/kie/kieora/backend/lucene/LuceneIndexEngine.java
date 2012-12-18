@@ -26,6 +26,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.TextField;
 import org.kie.kieora.engine.MetaIndexEngine;
 import org.kie.kieora.engine.MetaModelStore;
 import org.kie.kieora.model.KObject;
@@ -61,8 +62,9 @@ public class LuceneIndexEngine implements MetaIndexEngine {
     private Document newDocument( final KObject object ) {
         final Document doc = new Document();
 
-        doc.add( new StringField( "id", object.getKey(), Field.Store.YES ) );
+        doc.add( new StringField( "id", object.getId(), Field.Store.YES ) );
         doc.add( new StringField( "type", object.getType().getName(), Field.Store.YES ) );
+        doc.add( new TextField( "key", object.getKey(), Field.Store.YES ) );
 
         for ( final KProperty<?> property : object.getProperties() ) {
             doc.add( fieldFactory.build( property ) );

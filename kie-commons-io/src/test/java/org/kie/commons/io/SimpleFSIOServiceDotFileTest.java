@@ -33,7 +33,7 @@ public class SimpleFSIOServiceDotFileTest extends CommonIOExceptionsServiceDotFi
     public Path getFilePath() {
         try {
             final File dir = createTempDirectory();
-            return ioService.get( dir.toURI() ).resolve( "myTempFile.txt" );
+            return ioService().get( dir.toURI() ).resolve( "myTempFile.txt" );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -43,7 +43,7 @@ public class SimpleFSIOServiceDotFileTest extends CommonIOExceptionsServiceDotFi
     public Path getTargetPath() {
         try {
             final File dir = createTempDirectory();
-            return ioService.get( dir.toURI() ).resolve( "myTargetFile.txt" );
+            return ioService().get( dir.toURI() ).resolve( "myTargetFile.txt" );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -53,7 +53,7 @@ public class SimpleFSIOServiceDotFileTest extends CommonIOExceptionsServiceDotFi
     public Path getDirectoryPath() {
         try {
             final File dir = createTempDirectory();
-            return ioService.get( dir.toURI() ).resolve( "myDir" );
+            return ioService().get( dir.toURI() ).resolve( "myDir" );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -63,7 +63,7 @@ public class SimpleFSIOServiceDotFileTest extends CommonIOExceptionsServiceDotFi
     public Path getComposedDirectoryPath() {
         try {
             final File dir = createTempDirectory();
-            return ioService.get( dir.toURI() ).resolve( "path/to/myDir" );
+            return ioService().get( dir.toURI() ).resolve( "path/to/myDir" );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }

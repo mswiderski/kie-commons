@@ -17,7 +17,7 @@
 package org.kie.kieora.backend.lucene.metamodels;
 
 import java.io.File;
-import java.util.concurrent.ConcurrentMap;
+import java.util.Map;
 
 import org.kie.kieora.engine.MetaModelStore;
 import org.kie.kieora.model.schema.MetaObject;
@@ -29,15 +29,15 @@ import org.mapdb.DBMaker;
  */
 public class MapDbMetaModelStore implements MetaModelStore {
 
-    private final ConcurrentMap<String, MetaObject> metaModel;
-    private final DB                                db;
+    private final Map<String, MetaObject> metaModel;
+    private final DB                      db;
 
-    public MapDbMetaModelStore( final File dir ) {
+    public MapDbMetaModelStore( final File file ) {
         this.db = DBMaker
-                .newFileDB( new File( "testdb" ) )
+                .newFileDB( file )
                 .closeOnJvmShutdown()
                 .make();
-        this.metaModel = db.getHashMap( "metaModel" );
+        this.metaModel = db.getTreeMap( "metaModel" );
     }
 
     @Override

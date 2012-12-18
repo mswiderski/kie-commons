@@ -250,21 +250,21 @@ public class IOServiceDotFileImpl
         }};
     }
 
-    private CopyOption[] buildOptions( final CopyOption... options ) {
+    protected CopyOption[] buildOptions( final CopyOption... options ) {
         final CopyOption[] result = new CopyOption[ options.length + 1 ];
         System.arraycopy( options, 0, result, 0, options.length );
         result[ result.length - 1 ] = new DotFileOption();
         return result;
     }
 
-    private CopyOption[] forceBuildOptions( final CopyOption[] options ) {
+    protected CopyOption[] forceBuildOptions( final CopyOption[] options ) {
         final CopyOption[] result = new CopyOption[ options.length + 1 ];
         System.arraycopy( options, 0, result, 0, options.length );
         result[ result.length - 1 ] = REPLACE_EXISTING;
         return result;
     }
 
-    private boolean isFileScheme( final Path path ) {
+    protected boolean isFileScheme( final Path path ) {
         if ( path == null || path.getFileSystem() == null || path.getFileSystem().provider() == null ) {
             return false;
         }
@@ -272,7 +272,7 @@ public class IOServiceDotFileImpl
         return path.getFileSystem().provider().getScheme().equals( "file" );
     }
 
-    private void loadDotFile( final Path path ) {
+    protected void loadDotFile( final Path path ) {
         final Properties content = new Properties();
         content.load( newInputStream( dot( path ) ) );
 
@@ -281,7 +281,7 @@ public class IOServiceDotFileImpl
         }
     }
 
-    private <V extends AbstractBasicFileAttributeView> V newView( final AttrHolder holder,
+    protected <V extends AbstractBasicFileAttributeView> V newView( final AttrHolder holder,
                                                                   final Class<V> type ) {
         try {
             final Constructor<V> constructor = (Constructor<V>) type.getConstructors()[ 0 ];
@@ -293,7 +293,7 @@ public class IOServiceDotFileImpl
         return null;
     }
 
-    private synchronized Path internalCreateDirectory( final Path dir,
+    protected synchronized Path internalCreateDirectory( final Path dir,
                                                        final boolean skipAlreadyExistsException,
                                                        final FileAttribute<?>... attrs )
             throws IllegalArgumentException, UnsupportedOperationException, FileAlreadyExistsException,
@@ -319,7 +319,7 @@ public class IOServiceDotFileImpl
         return dir;
     }
 
-    private String[] split( final String attribute ) {
+    protected String[] split( final String attribute ) {
         final String[] s = new String[ 2 ];
         final int pos = attribute.indexOf( ':' );
         if ( pos == -1 ) {

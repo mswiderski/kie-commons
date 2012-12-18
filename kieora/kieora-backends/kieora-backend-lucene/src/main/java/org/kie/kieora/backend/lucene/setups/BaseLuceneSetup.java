@@ -72,7 +72,7 @@ public abstract class BaseLuceneSetup implements LuceneSetup {
             source.removeField( "id" );
             source.add( new StringField( "id", targetId, Field.Store.YES ) );
 
-            indexDocument( targetId, source );
+            indexDocument( sourceId, source );
         } catch ( IOException ex ) {
         } finally {
             nrtRelease( searcher );
@@ -89,6 +89,11 @@ public abstract class BaseLuceneSetup implements LuceneSetup {
         }
 
         int[] results = new int[ ids.length ];
+
+        for ( int i = 0; i < results.length; i++ ) {
+            results[ i ] = -1;
+        }
+
         for ( int idx = 0; idx < ids.length; idx++ ) {
             int base = 0;
             final BytesRef id = new BytesRef( ids[ idx ] );

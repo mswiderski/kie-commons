@@ -16,18 +16,26 @@
 
 package org.kie.kieora.backend.lucene;
 
+import java.io.IOException;
+
 import org.kie.kieora.backend.lucene.setups.BaseLuceneSetup;
-import org.kie.kieora.backend.lucene.setups.RAMLuceneSetup;
+import org.kie.kieora.backend.lucene.setups.MMapLuceneSetup;
+
+import static org.kie.kieora.backend.lucene.FileTestUtil.*;
 
 /**
  *
  */
-public class InMemoryLuceneSetupTest extends BaseLuceneSetupTest {
+public class MMapLuceneSetupTest extends BaseLuceneSetupTest {
 
-    private final RAMLuceneSetup luceneSetup;
+    private final MMapLuceneSetup luceneSetup;
 
-    public InMemoryLuceneSetupTest() {
-        this.luceneSetup = new RAMLuceneSetup();
+    public MMapLuceneSetupTest() {
+        try {
+            this.luceneSetup = new MMapLuceneSetup( createTempDirectory() );
+        } catch ( final IOException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     @Override
