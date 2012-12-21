@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import org.kie.commons.java.nio.IOException;
@@ -47,6 +48,7 @@ import org.kie.commons.java.nio.file.spi.FileSystemProvider;
 
 import static java.util.Collections.*;
 import static org.kie.commons.java.nio.file.AccessMode.*;
+import static org.kie.commons.regex.util.GlobToRegEx.*;
 import static org.kie.commons.validation.Preconditions.*;
 
 /**
@@ -168,18 +170,35 @@ public final class Files {
         } );
     }
 
-    //TODO impl
     public static DirectoryStream<Path> newDirectoryStream( final Path dir,
                                                             final String glob )
             throws IllegalArgumentException, UnsupportedOperationException, PatternSyntaxException, NotDirectoryException, IOException, SecurityException {
         checkNotNull( "dir", dir );
         checkNotEmpty( "glob", glob );
 
-        if ( !isDirectory( dir ) ) {
-            throw new NotDirectoryException( dir.toString() );
-        }
+        final String regex = globToRegex( glob );
 
-        throw new UnsupportedOperationException( "feature not available" );
+        final Pattern pattern = Pattern.compile( regex );
+
+        return newDirectoryStream( dir,
+                                   new DirectoryStream.Filter<Path>() {
+
+                                       @Override
+                                       public boolean accept( final Path entry ) throws IOException {
+                                           if ( entry.getFileName() == null ) {
+                                               if ( glob.equals( "/" ) ) {
+                                                   return true;
+                                               }
+                                               return false;
+                                           }
+
+                                           if ( pattern.matcher( entry.getFileName().toString() ).find() ) {
+                                               return true;
+                                           }
+                                           return false;
+                                       }
+                                   } );
+
     }
 
     /**

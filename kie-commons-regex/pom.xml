@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <!--
   ~ Copyright 2012 JBoss Inc
   ~
@@ -25,42 +24,20 @@
     <version>6.0.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>kie-commons-io</artifactId>
+  <artifactId>kie-commons-regex</artifactId>
   <packaging>jar</packaging>
 
-  <name>Kie Commons I/O</name>
+  <name>Kie Commons Regular Expression</name>
   <description>
-    Set of utilities/facades for NIO.2
+    Collection of reusable Regular Expressions utils.
   </description>
 
   <dependencies>
     <dependency>
       <groupId>org.kie.commons</groupId>
-      <artifactId>kie-commons-data</artifactId>
+      <artifactId>kie-commons-validation</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.kie.commons</groupId>
-      <artifactId>kie-nio2-model</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.kie.commons</groupId>
-      <artifactId>kie-nio2-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.kie.commons</groupId>
-      <artifactId>kie-nio2-jgit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.kie.commons</groupId>
-      <artifactId>kie-nio2-fs</artifactId>
-      <scope>test</scope>
-    </dependency>
+
   </dependencies>
 
   <build>

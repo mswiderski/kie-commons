@@ -25,11 +25,6 @@ import org.kie.commons.java.nio.file.attribute.UserPrincipal;
 
 public class FilesUnsupportedOpsTest extends AbstractBaseTest {
 
-    @Test(expected = UnsupportedOperationException.class)
-    public void newDirectoryStreamGlob() {
-        Files.newDirectoryStream( newTempDir(), "*.*" );
-    }
-
     @Test(expected = NotDirectoryException.class)
     public void newDirectoryStreamGlobNotDirectoryException() {
         Files.newDirectoryStream( Files.createTempFile( "foo", "bar" ), "*.*" );
