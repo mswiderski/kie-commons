@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,6 +50,8 @@ import org.kie.commons.java.nio.file.attribute.FileTime;
  *
  */
 public interface IOService {
+
+    public static Set<OpenOption> EMPTY_OPTIONS = new HashSet<OpenOption>();
 
     FileAttribute<?>[] convert( Map<String, ?> attrs );
 

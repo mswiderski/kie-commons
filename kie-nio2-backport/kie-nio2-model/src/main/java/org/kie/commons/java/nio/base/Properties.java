@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.XStreamException;
 
 /**
  *
@@ -52,7 +53,14 @@ public class Properties extends HashMap<String, Object> {
                       boolean closeOnFinish ) {
         final XStream xstream = new XStream();
         final Properties temp = new Properties();
-        xstream.fromXML( in, temp );
+        try {
+            xstream.fromXML( in, temp );
+        } catch ( final XStreamException ex ) {
+            if ( !ex.getMessage().equals( " : input contained no data" ) ) {
+                throw ex;
+            }
+        }
+
         for ( final Map.Entry<String, Object> entry : temp.entrySet() ) {
             if ( entry.getValue() != null ) {
                 put( entry.getKey(), entry.getValue() );

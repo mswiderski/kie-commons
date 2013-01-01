@@ -45,4 +45,15 @@ public class PropertiesTest {
 
     }
 
+    @Test
+    public void testEmptyState() throws IOException {
+        final File fcontent = File.createTempFile( "foo2", "bar" );
+        final Properties loadProperties = new Properties();
+
+        final InputStream in = new FileInputStream( fcontent );
+        loadProperties.load( in );
+
+        assertEquals( 0, loadProperties.size() );
+    }
+
 }
