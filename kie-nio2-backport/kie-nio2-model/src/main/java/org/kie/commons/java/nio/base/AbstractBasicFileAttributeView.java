@@ -76,48 +76,54 @@ public abstract class AbstractBasicFileAttributeView<P extends Path>
 
     @Override
     public Map<String, Object> readAllAttributes() {
-        final BasicFileAttributes attrs = readAttributes();
-        return new HashMap<String, Object>() {{
-            put( IS_REGULAR_FILE, attrs.isRegularFile() );
-            put( IS_DIRECTORY, attrs.isDirectory() );
-            put( IS_SYMBOLIC_LINK, attrs.isSymbolicLink() );
-            put( IS_OTHER, attrs.isOther() );
-            put( SIZE, attrs.size() );
-            put( FILE_KEY, attrs.fileKey() );
-            //todo check why errai can't serialize it
-            put( LAST_MODIFIED_TIME, null );
-            put( LAST_ACCESS_TIME, null );
-            put( CREATION_TIME, null );
-        }};
+        return readAllAttributes( readAttributes() );
     }
 
     @Override
     public Map<String, Object> readAttributes( final String... attributes ) {
-        final BasicFileAttributes attrs = readAttributes();
+        return readAttributes( readAttributes(), attributes );
+    }
+
+    @Override
+    public <T extends BasicFileAttributes> Map<String, Object> readAllAttributes( final T attrs ) throws IOException {
+        return readAttributes( attrs, "*" );
+    }
+
+    @Override
+    public <T extends BasicFileAttributes> Map<String, Object> readAttributes( final T attrs,
+                                                                               final String... attributes ) {
         return new HashMap<String, Object>() {{
             for ( final String attribute : attributes ) {
                 checkNotEmpty( "attribute", attribute );
-                if ( attribute.equals( "*" ) ) {
-                    putAll( readAllAttributes() );
-                    break;
-                } else if ( attribute.equals( IS_REGULAR_FILE ) ) {
+                if ( attribute.equals( "*" ) || attribute.equals( IS_REGULAR_FILE ) ) {
                     put( IS_REGULAR_FILE, attrs.isRegularFile() );
-                } else if ( attribute.equals( IS_DIRECTORY ) ) {
+                }
+                if ( attribute.equals( "*" ) || attribute.equals( IS_DIRECTORY ) ) {
                     put( IS_DIRECTORY, attrs.isDirectory() );
-                } else if ( attribute.equals( IS_SYMBOLIC_LINK ) ) {
+                }
+                if ( attribute.equals( "*" ) || attribute.equals( IS_SYMBOLIC_LINK ) ) {
                     put( IS_SYMBOLIC_LINK, attrs.isSymbolicLink() );
-                } else if ( attribute.equals( IS_OTHER ) ) {
+                }
+                if ( attribute.equals( "*" ) || attribute.equals( IS_OTHER ) ) {
                     put( IS_OTHER, attrs.isOther() );
-                } else if ( attribute.equals( SIZE ) ) {
+                }
+                if ( attribute.equals( "*" ) || attribute.equals( SIZE ) ) {
                     put( SIZE, new Long( attrs.size() ) );
-                } else if ( attribute.equals( FILE_KEY ) ) {
+                }
+                if ( attribute.equals( "*" ) || attribute.equals( FILE_KEY ) ) {
                     put( FILE_KEY, attrs.fileKey() );
-                } else if ( attribute.equals( LAST_MODIFIED_TIME ) ) {
+                }
+                if ( attribute.equals( "*" ) || attribute.equals( LAST_MODIFIED_TIME ) ) {
                     put( LAST_MODIFIED_TIME, null );
-                } else if ( attribute.equals( LAST_ACCESS_TIME ) ) {
+                }
+                if ( attribute.equals( "*" ) || attribute.equals( LAST_ACCESS_TIME ) ) {
                     put( LAST_ACCESS_TIME, null );
-                } else if ( attribute.equals( CREATION_TIME ) ) {
+                }
+                if ( attribute.equals( "*" ) || attribute.equals( CREATION_TIME ) ) {
                     put( CREATION_TIME, null );
+                }
+                if ( attribute.equals( "*" ) ) {
+                    break;
                 }
             }
         }};
