@@ -11,6 +11,7 @@ import org.kie.commons.data.Pair;
 import org.kie.commons.java.nio.IOException;
 import org.kie.commons.java.nio.base.AbstractBasicFileAttributeView;
 import org.kie.commons.java.nio.base.AbstractPath;
+import org.kie.commons.java.nio.base.NeedsPreloadedAttrs;
 import org.kie.commons.java.nio.base.NotImplementedException;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributeView;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
@@ -22,7 +23,9 @@ import static org.kie.commons.validation.PortablePreconditions.*;
 /**
  *
  */
-public class DublinCoreView extends AbstractBasicFileAttributeView<AbstractPath> {
+public class DublinCoreView
+        extends AbstractBasicFileAttributeView<AbstractPath>
+        implements NeedsPreloadedAttrs {
 
     private static final String TITLE              = "dcore.title";
     private static final String CREATOR            = "dcore.creator";

@@ -284,9 +284,10 @@ public class IOServiceDotFileImpl
 
     protected <V extends AbstractBasicFileAttributeView> V newView( final AttrHolder holder,
                                                                     final Class<V> type ) {
-        if ( NeedsPreloadedAttrs.class.isAssignableFrom( type ) ) {
+        if ( NeedsPreloadedAttrs.class.isAssignableFrom( type ) && holder.getAttrStorage().getContent().size() == 0 ) {
             readAttributes( (Path) holder );
         }
+
         try {
             final Constructor<V> constructor = (Constructor<V>) type.getConstructors()[ 0 ];
             final V view = constructor.newInstance( holder );
