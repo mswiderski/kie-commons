@@ -26,6 +26,7 @@ import org.kie.commons.io.IOService;
 import org.kie.commons.java.nio.IOException;
 import org.kie.commons.java.nio.base.AbstractBasicFileAttributeView;
 import org.kie.commons.java.nio.base.AttrHolder;
+import org.kie.commons.java.nio.base.NeedsPreloadedAttrs;
 import org.kie.commons.java.nio.base.Properties;
 import org.kie.commons.java.nio.base.dotfiles.DotFileOption;
 import org.kie.commons.java.nio.channels.SeekableByteChannel;
@@ -282,7 +283,10 @@ public class IOServiceDotFileImpl
     }
 
     protected <V extends AbstractBasicFileAttributeView> V newView( final AttrHolder holder,
-                                                                  final Class<V> type ) {
+                                                                    final Class<V> type ) {
+        if ( NeedsPreloadedAttrs.class.isAssignableFrom( type ) ) {
+            readAttributes( (Path) holder );
+        }
         try {
             final Constructor<V> constructor = (Constructor<V>) type.getConstructors()[ 0 ];
             final V view = constructor.newInstance( holder );
@@ -294,8 +298,8 @@ public class IOServiceDotFileImpl
     }
 
     protected synchronized Path internalCreateDirectory( final Path dir,
-                                                       final boolean skipAlreadyExistsException,
-                                                       final FileAttribute<?>... attrs )
+                                                         final boolean skipAlreadyExistsException,
+                                                         final FileAttribute<?>... attrs )
             throws IllegalArgumentException, UnsupportedOperationException, FileAlreadyExistsException,
             IOException, SecurityException {
         checkNotNull( "dir", dir );

@@ -76,22 +76,13 @@ public abstract class AbstractBasicFileAttributeView<P extends Path>
 
     @Override
     public Map<String, Object> readAllAttributes() {
-        return readAllAttributes( readAttributes() );
+        return readAttributes( "*" );
     }
 
     @Override
     public Map<String, Object> readAttributes( final String... attributes ) {
-        return readAttributes( readAttributes(), attributes );
-    }
+        final BasicFileAttributes attrs = readAttributes();
 
-    @Override
-    public <T extends BasicFileAttributes> Map<String, Object> readAllAttributes( final T attrs ) throws IOException {
-        return readAttributes( attrs, "*" );
-    }
-
-    @Override
-    public <T extends BasicFileAttributes> Map<String, Object> readAttributes( final T attrs,
-                                                                               final String... attributes ) {
         return new HashMap<String, Object>() {{
             for ( final String attribute : attributes ) {
                 checkNotEmpty( "attribute", attribute );

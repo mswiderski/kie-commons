@@ -258,9 +258,8 @@ public class DublinCoreView extends AbstractBasicFileAttributeView<AbstractPath>
     }
 
     @Override
-    public <T extends BasicFileAttributes> Map<String, Object> readAttributes( final T _attrs,
-                                                                               final String... attributes ) {
-        final DublinCoreAttributes attrs = (DublinCoreAttributes) _attrs;
+    public Map<String, Object> readAttributes( final String... attributes ) {
+        final DublinCoreAttributes attrs = readAttributes();
 
         return new HashMap<String, Object>() {{
             for ( final String attribute : attributes ) {

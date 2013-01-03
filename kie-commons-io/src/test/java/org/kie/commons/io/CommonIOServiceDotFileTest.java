@@ -32,6 +32,7 @@ import org.kie.commons.io.impl.IOServiceDotFileImpl;
 import org.kie.commons.java.nio.base.AbstractBasicFileAttributeView;
 import org.kie.commons.java.nio.base.AbstractPath;
 import org.kie.commons.java.nio.base.AttrHolder;
+import org.kie.commons.java.nio.base.NeedsPreloadedAttrs;
 import org.kie.commons.java.nio.channels.SeekableByteChannel;
 import org.kie.commons.java.nio.file.FileAlreadyExistsException;
 import org.kie.commons.java.nio.file.OpenOption;
@@ -559,7 +560,8 @@ public abstract class CommonIOServiceDotFileTest {
 
     }
 
-    public static class DublinCoreView extends AbstractBasicFileAttributeView<AbstractPath> {
+    public static class DublinCoreView extends AbstractBasicFileAttributeView<AbstractPath>
+            implements NeedsPreloadedAttrs {
 
         private BasicFileAttributes attrs = null;
 

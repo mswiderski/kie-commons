@@ -30,11 +30,6 @@ public interface ExtendedAttributeView extends AttributeView {
 
     Map<String, Object> readAttributes( final String... attributes );
 
-    <T extends BasicFileAttributes> Map<String, Object> readAllAttributes( final T attrs ) throws IOException;
-
-    <T extends BasicFileAttributes> Map<String, Object> readAttributes( final T attrs,
-                                                                        final String... attributes );
-
     void setAttribute( final String attribute,
                        final Object value ) throws IOException;
 
