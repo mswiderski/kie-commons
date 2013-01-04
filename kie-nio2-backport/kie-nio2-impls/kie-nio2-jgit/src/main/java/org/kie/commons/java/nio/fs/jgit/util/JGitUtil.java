@@ -812,7 +812,7 @@ public final class JGitUtil {
                 }
                 boolean noProblems;
                 final Merger merger = mergeStrategy.newMerger( repo );
-                final Map<String, org.eclipse.jgit.merge.MergeResult<? extends Sequence>> lowLevelResults;
+                final Map<String, org.eclipse.jgit.merge.MergeResult<?>> lowLevelResults;
                 final Map<String, ResolveMerger.MergeFailureReason> failingPaths;
                 final List<String> unmergedPaths;
 
