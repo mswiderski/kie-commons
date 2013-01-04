@@ -19,6 +19,7 @@ package org.kie.commons.java.nio.base.version;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.kie.commons.java.nio.IOException;
 import org.kie.commons.java.nio.base.AbstractBasicFileAttributeView;
 import org.kie.commons.java.nio.file.Path;
 
@@ -40,6 +41,8 @@ public abstract class VersionAttributeView<P extends Path>
     public String name() {
         return VERSION;
     }
+
+    public abstract VersionAttributes readAttributes() throws IOException;
 
     @Override
     public Map<String, Object> readAttributes( final String... attributes ) {

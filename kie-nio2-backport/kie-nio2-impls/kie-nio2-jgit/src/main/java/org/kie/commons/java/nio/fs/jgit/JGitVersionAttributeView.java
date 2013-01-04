@@ -4,7 +4,6 @@ import org.kie.commons.java.nio.IOException;
 import org.kie.commons.java.nio.base.version.VersionAttributeView;
 import org.kie.commons.java.nio.base.version.VersionAttributes;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributeView;
-import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
 import org.kie.commons.java.nio.fs.jgit.util.JGitUtil;
 
 /**
@@ -19,11 +18,11 @@ public class JGitVersionAttributeView extends VersionAttributeView<JGitPathImpl>
     }
 
     @Override
-    public <T extends BasicFileAttributes> T readAttributes() throws IOException {
+    public VersionAttributes readAttributes() throws IOException {
         if ( attrs == null ) {
             attrs = JGitUtil.buildVersionAttributes( path.getFileSystem().gitRepo(), path.getRefTree(), path.getPath() );
         }
-        return (T) attrs;
+        return attrs;
     }
 
     @Override
