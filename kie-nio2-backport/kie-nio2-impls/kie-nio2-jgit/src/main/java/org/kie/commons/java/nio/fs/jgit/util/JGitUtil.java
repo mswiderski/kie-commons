@@ -43,6 +43,7 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.api.errors.NoHeadException;
+import org.eclipse.jgit.diff.Sequence;
 import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.dircache.DirCacheBuilder;
 import org.eclipse.jgit.dircache.DirCacheCheckout;
@@ -811,7 +812,7 @@ public final class JGitUtil {
                 }
                 boolean noProblems;
                 final Merger merger = mergeStrategy.newMerger( repo );
-                final Map<String, org.eclipse.jgit.merge.MergeResult<?>> lowLevelResults;
+                final Map<String, org.eclipse.jgit.merge.MergeResult<? extends Sequence>> lowLevelResults;
                 final Map<String, ResolveMerger.MergeFailureReason> failingPaths;
                 final List<String> unmergedPaths;
 
@@ -820,7 +821,7 @@ public final class JGitUtil {
                     resolveMerger.setCommitNames( new String[]{ "BASE", "HEAD", ref.getName() } );
                     resolveMerger.setWorkingTreeIterator( new FileTreeIterator( repo ) );
                     noProblems = merger.merge( headCommit, srcCommit );
-                    lowLevelResults = (Map<String, org.eclipse.jgit.merge.MergeResult<?>>) resolveMerger.getMergeResults();
+                    lowLevelResults = resolveMerger.getMergeResults();
                     failingPaths = resolveMerger.getFailingPaths();
                     unmergedPaths = resolveMerger.getUnmergedPaths();
                 } else {
