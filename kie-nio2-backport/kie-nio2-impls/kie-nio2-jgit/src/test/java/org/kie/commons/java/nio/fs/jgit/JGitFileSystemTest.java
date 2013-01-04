@@ -121,7 +121,7 @@ public class JGitFileSystemTest extends AbstractTestInfra {
         assertThat( fileSystem.getSeparator() ).isEqualTo( "/" );
         assertThat( fileSystem.getName() ).isEqualTo( "my-repo" );
 
-        assertThat( fileSystem.supportedFileAttributeViews() ).isNotEmpty().hasSize( 1 ).contains( "basic" );
+        assertThat( fileSystem.supportedFileAttributeViews() ).isNotEmpty().hasSize( 2 ).contains( "basic", "version" );
     }
 
     @Test

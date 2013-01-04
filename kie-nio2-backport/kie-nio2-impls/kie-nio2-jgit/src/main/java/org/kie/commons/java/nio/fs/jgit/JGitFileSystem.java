@@ -45,6 +45,7 @@ public class JGitFileSystem implements FileSystem {
 
     private static final Set<String> SUPPORTED_ATTR_VIEWS = Collections.unmodifiableSet( new HashSet<String>() {{
         add( "basic" );
+        add( "version" );
     }} );
 
     private final FileSystemProvider         provider;

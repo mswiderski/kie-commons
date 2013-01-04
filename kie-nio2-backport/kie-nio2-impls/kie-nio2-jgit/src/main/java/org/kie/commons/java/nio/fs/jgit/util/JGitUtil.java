@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 JBoss Inc
+ * Copyright 2013 JBoss Inc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -77,10 +78,10 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.kie.commons.data.Pair;
 import org.kie.commons.java.nio.IOException;
-import org.kie.commons.java.nio.base.BasicFileAttributesImpl;
 import org.kie.commons.java.nio.base.FileTimeImpl;
+import org.kie.commons.java.nio.base.version.VersionAttributes;
+import org.kie.commons.java.nio.base.version.VersionRecord;
 import org.kie.commons.java.nio.file.NoSuchFileException;
-import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
 import org.kie.commons.java.nio.file.attribute.FileTime;
 
 import static java.util.Collections.*;
@@ -443,13 +444,9 @@ public final class JGitUtil {
         }
     }
 
-    public static BasicFileAttributes buildBasicFileAttributes( final Git git,
-                                                                final String branchName,
-                                                                final String path ) {
-
-        FileTime olastModified = null;
-        FileTime ocreateDate = null;
-
+    public static VersionAttributes buildVersionAttributes( final Git git,
+                                                            final String branchName,
+                                                            final String path ) {
         final JGitPathInfo pathInfo = resolvePath( git, branchName, path );
 
         if ( pathInfo == null ) {
@@ -460,10 +457,9 @@ public final class JGitUtil {
 
         final Ref branchRef = getBranch( git, branchName );
 
-        if ( branchRef != null ) {
-            long createDate = Long.MAX_VALUE;
-            long lastModified = Long.MIN_VALUE;
+        final List<VersionRecord> records = new ArrayList<VersionRecord>();
 
+        if ( branchRef != null ) {
             try {
                 final LogCommand logCommand = git.log().add( branchRef.getObjectId() );
                 if ( !gPath.isEmpty() ) {
@@ -471,21 +467,99 @@ public final class JGitUtil {
                 }
 
                 for ( final RevCommit commit : logCommand.call() ) {
-                    if ( commit.getAuthorIdent().getWhen().getTime() < createDate ) {
-                        createDate = commit.getAuthorIdent().getWhen().getTime();
-                    }
-                    if ( commit.getAuthorIdent().getWhen().getTime() > lastModified ) {
-                        lastModified = commit.getAuthorIdent().getWhen().getTime();
-                    }
+
+                    records.add( new VersionRecord() {
+                        @Override
+                        public String id() {
+                            return commit.getId().toString();
+                        }
+
+                        @Override
+                        public String author() {
+                            return commit.getCommitterIdent().getName();
+                        }
+
+                        @Override
+                        public String comment() {
+                            return commit.getFullMessage();
+                        }
+
+                        @Override
+                        public Date date() {
+                            return commit.getCommitterIdent().getWhen();
+                        }
+                    } );
                 }
-                olastModified = new FileTimeImpl( lastModified );
-                ocreateDate = new FileTimeImpl( createDate );
             } catch ( Exception e ) {
                 throw new RuntimeException( e );
             }
         }
 
-        return new BasicFileAttributesImpl( pathInfo.getObjectId() == null ? null : pathInfo.getObjectId().toString(), olastModified, ocreateDate, null, pathInfo.getSize(), pathInfo.getPathType().equals( PathType.FILE ), pathInfo.getPathType().equals( PathType.DIRECTORY ) );
+        Collections.sort( records, new Comparator<VersionRecord>() {
+            @Override
+            public int compare( final VersionRecord o1,
+                                final VersionRecord o2 ) {
+                return o1.date().compareTo( o2.date() );
+            }
+        } );
+
+        return new VersionAttributes() {
+            @Override
+            public List<VersionRecord> history() {
+                return records;
+            }
+
+            @Override
+            public FileTime lastModifiedTime() {
+                if ( records.size() > 0 ) {
+                    return new FileTimeImpl( records.get( 0 ).date().getTime() );
+                }
+                return null;
+            }
+
+            @Override
+            public FileTime lastAccessTime() {
+                return null;
+            }
+
+            @Override
+            public FileTime creationTime() {
+                if ( records.size() > 0 ) {
+                    return new FileTimeImpl( records.get( records.size() - 1 ).date().getTime() );
+                }
+                return null;
+            }
+
+            @Override
+            public boolean isRegularFile() {
+                return pathInfo.getPathType().equals( PathType.FILE );
+            }
+
+            @Override
+            public boolean isDirectory() {
+                return pathInfo.getPathType().equals( PathType.DIRECTORY );
+            }
+
+            @Override
+            public boolean isSymbolicLink() {
+                return false;
+            }
+
+            @Override
+            public boolean isOther() {
+                return false;
+            }
+
+            @Override
+            public long size() {
+                return pathInfo.getSize();
+            }
+
+            @Override
+            public Object fileKey() {
+                return pathInfo.getObjectId() == null ? null : pathInfo.getObjectId().toString();
+            }
+        };
     }
 
     public static void createBranch( final Git git,

@@ -64,6 +64,56 @@ public class IOServiceIndexedGitImplTest extends CommonIOExceptionsServiceDotFil
         return ioService;
     }
 
+    @Override
+    protected int testFileAttrSize4() {
+        return 7;
+    }
+
+    @Override
+    protected int testFileAttrSize3() {
+        return 10;
+    }
+
+    @Override
+    protected int testFileAttrSize2() {
+        return 11;
+    }
+
+    @Override
+    protected int testFileAttrSize1() {
+        return 10;
+    }
+
+    @Override
+    protected int testDirectoryAttrSize4() {
+        return 7;
+    }
+
+    @Override
+    protected int testDirectoryAttrSize3() {
+        return 10;
+    }
+
+    @Override
+    protected int testDirectoryAttrSize2() {
+        return 11;
+    }
+
+    @Override
+    protected int testDirectoryAttrSize1() {
+        return 10;
+    }
+
+    @Override
+    protected int createDirectoriesAttrSize() {
+        return 8;
+    }
+
+    @Override
+    protected int testNewByteChannelAttrSize() {
+        return 8;
+    }
+
     @Test
     public void testIndexedFile() throws IOException {
         final Path path = getDirectoryPath().resolveSibling( "someNewOtherPath" ).resolve( "myIndexedFile.txt" );
@@ -250,7 +300,7 @@ public class IOServiceIndexedGitImplTest extends CommonIOExceptionsServiceDotFil
 
         final Map<String, Object> attrsValue = ioService().readAttributes( path );
 
-        assertEquals( 6, attrsValue.size() );
+        assertEquals( 7, attrsValue.size() );
         assertTrue( attrsValue.containsKey( "my_new_key" ) );
 
         ioService().setAttributes( path, new FileAttribute<Object>() {
@@ -267,7 +317,7 @@ public class IOServiceIndexedGitImplTest extends CommonIOExceptionsServiceDotFil
 
         final Map<String, Object> attrsValue2 = ioService().readAttributes( path );
 
-        assertEquals( 5, attrsValue2.size() );
+        assertEquals( 6, attrsValue2.size() );
         assertFalse( attrsValue2.containsKey( "my_new_key" ) );
     }
 

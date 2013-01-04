@@ -30,6 +30,56 @@ public class SimpleFSIOServiceDotFileTest extends CommonIOExceptionsServiceDotFi
     protected static final Map<String, Object> EMPTY_ENV = Collections.emptyMap();
 
     @Override
+    protected int testFileAttrSize4() {
+        return 6;
+    }
+
+    @Override
+    protected int testFileAttrSize3() {
+        return 9;
+    }
+
+    @Override
+    protected int testFileAttrSize2() {
+        return 10;
+    }
+
+    @Override
+    protected int testFileAttrSize1() {
+        return 9;
+    }
+
+    @Override
+    protected int testDirectoryAttrSize4() {
+        return 6;
+    }
+
+    @Override
+    protected int testDirectoryAttrSize3() {
+        return 9;
+    }
+
+    @Override
+    protected int testDirectoryAttrSize2() {
+        return 10;
+    }
+
+    @Override
+    protected int testDirectoryAttrSize1() {
+        return 9;
+    }
+
+    @Override
+    protected int createDirectoriesAttrSize() {
+        return 7;
+    }
+
+    @Override
+    protected int testNewByteChannelAttrSize() {
+        return 7;
+    }
+
+    @Override
     public Path getFilePath() {
         try {
             final File dir = createTempDirectory();

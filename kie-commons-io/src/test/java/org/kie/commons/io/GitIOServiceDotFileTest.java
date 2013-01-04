@@ -34,6 +34,56 @@ import static org.junit.Assert.*;
  */
 public class GitIOServiceDotFileTest extends CommonIOExceptionsServiceDotFileTest {
 
+    @Override
+    protected int testFileAttrSize4() {
+        return 7;
+    }
+
+    @Override
+    protected int testFileAttrSize3() {
+        return 10;
+    }
+
+    @Override
+    protected int testFileAttrSize2() {
+        return 11;
+    }
+
+    @Override
+    protected int testFileAttrSize1() {
+        return 10;
+    }
+
+    @Override
+    protected int testDirectoryAttrSize4() {
+        return 7;
+    }
+
+    @Override
+    protected int testDirectoryAttrSize3() {
+        return 10;
+    }
+
+    @Override
+    protected int testDirectoryAttrSize2() {
+        return 11;
+    }
+
+    @Override
+    protected int testDirectoryAttrSize1() {
+        return 10;
+    }
+
+    @Override
+    protected int createDirectoriesAttrSize() {
+        return 8;
+    }
+
+    @Override
+    protected int testNewByteChannelAttrSize() {
+        return 8;
+    }
+
     @Test
     public void testRoot() throws IOException {
         final Path path = getRootPath();
@@ -52,7 +102,7 @@ public class GitIOServiceDotFileTest extends CommonIOExceptionsServiceDotFileTes
 
         final Map<String, Object> attrsValue = ioService().readAttributes( path );
 
-        assertEquals( 6, attrsValue.size() );
+        assertEquals( 7, attrsValue.size() );
         assertTrue( attrsValue.containsKey( "my_new_key" ) );
 
         ioService().setAttributes( path, new FileAttribute<Object>() {
@@ -69,7 +119,7 @@ public class GitIOServiceDotFileTest extends CommonIOExceptionsServiceDotFileTes
 
         final Map<String, Object> attrsValue2 = ioService().readAttributes( path );
 
-        assertEquals( 5, attrsValue2.size() );
+        assertEquals( 6, attrsValue2.size() );
         assertFalse( attrsValue2.containsKey( "my_new_key" ) );
     }
 

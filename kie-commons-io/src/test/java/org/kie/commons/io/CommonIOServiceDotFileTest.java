@@ -92,7 +92,7 @@ public abstract class CommonIOServiceDotFileTest {
 
         Map<String, Object> attrs = ioService().readAttributes( path );
 
-        assertEquals( 9, attrs.size() );
+        assertEquals( testFileAttrSize1(), attrs.size() );
         assertTrue( attrs.containsKey( "int.hello" ) );
         assertTrue( attrs.containsKey( "custom" ) );
         assertTrue( attrs.containsKey( "int" ) );
@@ -115,7 +115,7 @@ public abstract class CommonIOServiceDotFileTest {
 
         final Map<String, Object> attrsValue = ioService().readAttributes( path );
 
-        assertEquals( 10, attrsValue.size() );
+        assertEquals( testFileAttrSize2(), attrsValue.size() );
         assertTrue( attrsValue.containsKey( "my_new_key" ) );
 
         ioService().setAttributes( path, new FileAttribute<Object>() {
@@ -132,7 +132,7 @@ public abstract class CommonIOServiceDotFileTest {
 
         final Map<String, Object> attrsValue2 = ioService().readAttributes( path );
 
-        assertEquals( 9, attrsValue2.size() );
+        assertEquals( testFileAttrSize3(), attrsValue2.size() );
         assertFalse( attrsValue2.containsKey( "my_new_key" ) );
 
         ioService().delete( path );
@@ -141,8 +141,16 @@ public abstract class CommonIOServiceDotFileTest {
 
         final Map<String, Object> attrsClean = ioService().readAttributes( path );
 
-        assertEquals( 6, attrsClean.size() );
+        assertEquals( testFileAttrSize4(), attrsClean.size() );
     }
+
+    protected abstract int testFileAttrSize4();
+
+    protected abstract int testFileAttrSize3();
+
+    protected abstract int testFileAttrSize2();
+
+    protected abstract int testFileAttrSize1();
 
     @Test
     public void testDirectory() throws IOException {
@@ -182,7 +190,7 @@ public abstract class CommonIOServiceDotFileTest {
 
         Map<String, Object> attrs = ioService().readAttributes( path );
 
-        assertEquals( 9, attrs.size() );
+        assertEquals( testDirectoryAttrSize1(), attrs.size() );
         assertTrue( attrs.containsKey( "int.hello" ) );
         assertTrue( attrs.containsKey( "custom" ) );
         assertTrue( attrs.containsKey( "int" ) );
@@ -205,14 +213,14 @@ public abstract class CommonIOServiceDotFileTest {
 
         final Map<String, Object> attrsValue = ioService().readAttributes( path );
 
-        assertEquals( 10, attrsValue.size() );
+        assertEquals( testDirectoryAttrSize2(), attrsValue.size() );
         assertTrue( attrsValue.containsKey( "my_new_key" ) );
 
         ioService().setAttribute( path, "my_new_key", null );
 
         final Map<String, Object> attrsValue2 = ioService().readAttributes( path );
 
-        assertEquals( 9, attrsValue2.size() );
+        assertEquals( testDirectoryAttrSize3(), attrsValue2.size() );
         assertFalse( attrsValue2.containsKey( "my_new_key" ) );
 
         ioService().delete( path );
@@ -221,8 +229,16 @@ public abstract class CommonIOServiceDotFileTest {
 
         final Map<String, Object> attrsClean = ioService().readAttributes( path );
 
-        assertEquals( 6, attrsClean.size() );
+        assertEquals( testDirectoryAttrSize4(), attrsClean.size() );
     }
+
+    protected abstract int testDirectoryAttrSize4();
+
+    protected abstract int testDirectoryAttrSize3();
+
+    protected abstract int testDirectoryAttrSize2();
+
+    protected abstract int testDirectoryAttrSize1();
 
     @Test
     public void testDelete() throws IOException {
@@ -353,12 +369,14 @@ public abstract class CommonIOServiceDotFileTest {
 
         Map<String, Object> attrs = ioService().readAttributes( dir );
 
-        assertEquals( 7, attrs.size() );
+        assertEquals( createDirectoriesAttrSize(), attrs.size() );
 
         ioService().delete( dir );
 
         ioService().exists( dir.getParent() );
     }
+
+    protected abstract int createDirectoriesAttrSize();
 
     @Test
     public void testDeleteIfExistis() throws IOException {
@@ -454,7 +472,7 @@ public abstract class CommonIOServiceDotFileTest {
 
         Map<String, Object> attrs = ioService().readAttributes( file );
 
-        assertEquals( 7, attrs.size() );
+        assertEquals( testNewByteChannelAttrSize(), attrs.size() );
 
         try {
             ioService().newByteChannel( file, Collections.<OpenOption>emptySet() );
@@ -468,6 +486,8 @@ public abstract class CommonIOServiceDotFileTest {
 
         assertTrue( ioService().deleteIfExists( file ) );
     }
+
+    protected abstract int testNewByteChannelAttrSize();
 
     @Test
     public void testGetAttribute() {

@@ -53,6 +53,7 @@ import org.kie.commons.java.nio.base.ExtendedAttributeView;
 import org.kie.commons.java.nio.base.SeekableByteChannelFileBasedImpl;
 import org.kie.commons.java.nio.base.dotfiles.DotFileOption;
 import org.kie.commons.java.nio.base.options.CommentedOption;
+import org.kie.commons.java.nio.base.version.VersionAttributes;
 import org.kie.commons.java.nio.channels.AsynchronousFileChannel;
 import org.kie.commons.java.nio.channels.SeekableByteChannel;
 import org.kie.commons.java.nio.file.AccessDeniedException;
@@ -887,8 +888,8 @@ public class JGitFileSystemProvider implements FileSystemProvider {
 
         final V resultView = gPath.getAttrView( type );
 
-        if ( resultView == null && type == BasicFileAttributeView.class || type == JGitBasicFileAttributeView.class ) {
-            final V newView = (V) new JGitBasicFileAttributeView( gPath );
+        if ( resultView == null && ( type == BasicFileAttributeView.class || type == JGitVersionAttributeView.class ) ) {
+            final V newView = (V) new JGitVersionAttributeView( gPath );
             gPath.addAttrView( newView );
             return newView;
         }
@@ -901,8 +902,8 @@ public class JGitFileSystemProvider implements FileSystemProvider {
                                                         final LinkOption... options ) {
         final ExtendedAttributeView view = path.getAttrView( name );
 
-        if ( view == null && name.equals( "basic" ) ) {
-            final JGitBasicFileAttributeView newView = new JGitBasicFileAttributeView( path );
+        if ( view == null && ( name.equals( "basic" ) || name.equals( "version" ) ) ) {
+            final JGitVersionAttributeView newView = new JGitVersionAttributeView( path );
             path.addAttrView( newView );
             return newView;
         }
@@ -924,8 +925,8 @@ public class JGitFileSystemProvider implements FileSystemProvider {
             throw new NoSuchFileException( path.toString() );
         }
 
-        if ( type == BasicFileAttributesImpl.class || type == BasicFileAttributes.class ) {
-            final JGitBasicFileAttributeView view = getFileAttributeView( path, JGitBasicFileAttributeView.class, options );
+        if ( type == BasicFileAttributesImpl.class || type == BasicFileAttributes.class || type == VersionAttributes.class ) {
+            final JGitVersionAttributeView view = getFileAttributeView( path, JGitVersionAttributeView.class, options );
             return (A) view.readAttributes();
         }
 
