@@ -53,6 +53,7 @@ import org.kie.commons.java.nio.base.ExtendedAttributeView;
 import org.kie.commons.java.nio.base.SeekableByteChannelFileBasedImpl;
 import org.kie.commons.java.nio.base.dotfiles.DotFileOption;
 import org.kie.commons.java.nio.base.options.CommentedOption;
+import org.kie.commons.java.nio.base.version.VersionAttributeView;
 import org.kie.commons.java.nio.base.version.VersionAttributes;
 import org.kie.commons.java.nio.channels.AsynchronousFileChannel;
 import org.kie.commons.java.nio.channels.SeekableByteChannel;
@@ -888,7 +889,7 @@ public class JGitFileSystemProvider implements FileSystemProvider {
 
         final V resultView = gPath.getAttrView( type );
 
-        if ( resultView == null && ( type == BasicFileAttributeView.class || type == JGitVersionAttributeView.class ) ) {
+        if ( resultView == null && ( type == BasicFileAttributeView.class || type == VersionAttributeView.class || type == JGitVersionAttributeView.class ) ) {
             final V newView = (V) new JGitVersionAttributeView( gPath );
             gPath.addAttrView( newView );
             return newView;

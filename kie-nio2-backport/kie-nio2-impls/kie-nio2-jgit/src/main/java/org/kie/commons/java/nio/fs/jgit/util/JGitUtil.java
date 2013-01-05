@@ -43,7 +43,6 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.api.errors.NoHeadException;
-import org.eclipse.jgit.diff.Sequence;
 import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.dircache.DirCacheBuilder;
 import org.eclipse.jgit.dircache.DirCacheCheckout;
@@ -513,7 +512,7 @@ public final class JGitUtil {
             @Override
             public FileTime lastModifiedTime() {
                 if ( records.size() > 0 ) {
-                    return new FileTimeImpl( records.get( 0 ).date().getTime() );
+                    return new FileTimeImpl( records.get( records.size() - 1 ).date().getTime() );
                 }
                 return null;
             }
@@ -526,7 +525,7 @@ public final class JGitUtil {
             @Override
             public FileTime creationTime() {
                 if ( records.size() > 0 ) {
-                    return new FileTimeImpl( records.get( records.size() - 1 ).date().getTime() );
+                    return new FileTimeImpl( records.get( 0 ).date().getTime() );
                 }
                 return null;
             }
