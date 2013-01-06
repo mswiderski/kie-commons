@@ -20,7 +20,7 @@ public class JGitVersionAttributeView extends VersionAttributeView<JGitPathImpl>
     @Override
     public VersionAttributes readAttributes() throws IOException {
         if ( attrs == null ) {
-            attrs = JGitUtil.buildVersionAttributes( path.getFileSystem().gitRepo(), path.getRefTree(), path.getPath() );
+            attrs = JGitUtil.buildVersionAttributes( path.getFileSystem(), path.getRefTree(), path.getPath() );
         }
         return attrs;
     }

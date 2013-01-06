@@ -15,4 +15,5 @@ public interface VersionRecord {
 
     Date date();
 
+    String uri();
 }

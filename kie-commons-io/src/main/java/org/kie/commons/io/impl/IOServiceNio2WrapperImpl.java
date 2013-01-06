@@ -16,6 +16,7 @@
 
 package org.kie.commons.io.impl;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -135,7 +136,14 @@ public class IOServiceNio2WrapperImpl
     }
 
     @Override
-    protected Set<? extends OpenOption> buildOptions( final Set<? extends OpenOption> options ) {
-        return options;
+    protected Set<? extends OpenOption> buildOptions( final Set<? extends OpenOption> options,
+                                                      final OpenOption... others ) {
+        return new HashSet<OpenOption>( options ) {{
+            if ( others != null ) {
+                for ( final OpenOption other : others ) {
+                    add( other );
+                }
+            }
+        }};
     }
 }

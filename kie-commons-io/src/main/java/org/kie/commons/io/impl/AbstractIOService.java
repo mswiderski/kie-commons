@@ -36,6 +36,7 @@ import java.util.Set;
 import org.kie.commons.io.FileSystemType;
 import org.kie.commons.io.IOService;
 import org.kie.commons.java.nio.IOException;
+import org.kie.commons.java.nio.base.AbstractPath;
 import org.kie.commons.java.nio.channels.SeekableByteChannel;
 import org.kie.commons.java.nio.file.CopyOption;
 import org.kie.commons.java.nio.file.DirectoryNotEmptyException;
@@ -502,8 +503,8 @@ public abstract class AbstractIOService implements IOService {
         try {
             byteChannel = newByteChannel( path, buildOptions( options ), attrs );
         } catch ( final FileAlreadyExistsException ex ) {
-            Files.delete( path );
-            byteChannel = newByteChannel( path, buildOptions( options ), attrs );
+            ( (AbstractPath) path ).clearCache();
+            byteChannel = newByteChannel( path, buildOptions( options, TRUNCATE_EXISTING ), attrs );
         }
 
         try {
@@ -516,6 +517,7 @@ public abstract class AbstractIOService implements IOService {
         return path;
     }
 
-    protected abstract Set<? extends OpenOption> buildOptions( final Set<? extends OpenOption> options );
+    protected abstract Set<? extends OpenOption> buildOptions( final Set<? extends OpenOption> options,
+                                                               final OpenOption... other );
 
 }

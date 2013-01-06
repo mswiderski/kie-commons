@@ -245,9 +245,15 @@ public class IOServiceDotFileImpl
     }
 
     @Override
-    protected Set<? extends OpenOption> buildOptions( final Set<? extends OpenOption> options ) {
+    protected Set<? extends OpenOption> buildOptions( final Set<? extends OpenOption> options,
+                                                      final OpenOption... others ) {
         return new HashSet<OpenOption>( options ) {{
             add( new DotFileOption() );
+            if ( others != null ) {
+                for ( final OpenOption other : others ) {
+                    add( other );
+                }
+            }
         }};
     }
 

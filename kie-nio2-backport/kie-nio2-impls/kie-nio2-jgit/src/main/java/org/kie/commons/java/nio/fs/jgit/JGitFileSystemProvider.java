@@ -84,6 +84,7 @@ import org.kie.commons.java.nio.fs.jgit.util.JGitUtil;
 import static org.eclipse.jgit.api.ListBranchCommand.ListMode.*;
 import static org.eclipse.jgit.lib.Constants.*;
 import static org.kie.commons.java.nio.base.dotfiles.DotFileUtils.*;
+import static org.kie.commons.java.nio.file.StandardOpenOption.*;
 import static org.kie.commons.java.nio.fs.jgit.util.JGitUtil.*;
 import static org.kie.commons.java.nio.fs.jgit.util.JGitUtil.PathType.*;
 import static org.kie.commons.validation.Preconditions.*;
@@ -347,7 +348,9 @@ public class JGitFileSystemProvider implements FileSystemProvider {
         final JGitPathImpl gPath = toPathImpl( path );
 
         if ( exists( path ) ) {
-            throw new FileAlreadyExistsException( path.toString() );
+            if ( !( options != null && options.contains( TRUNCATE_EXISTING ) ) ) {
+                throw new FileAlreadyExistsException( path.toString() );
+            }
         }
 
         final Pair<PathType, ObjectId> result = checkPath( gPath.getFileSystem().gitRepo(), gPath.getRefTree(), gPath.getPath() );

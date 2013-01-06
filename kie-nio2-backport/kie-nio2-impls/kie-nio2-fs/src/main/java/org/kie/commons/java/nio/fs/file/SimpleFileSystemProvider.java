@@ -64,6 +64,7 @@ import org.kie.commons.java.nio.file.attribute.FileAttribute;
 import org.kie.commons.java.nio.file.attribute.FileAttributeView;
 import org.kie.commons.java.nio.file.spi.FileSystemProvider;
 
+import static org.kie.commons.java.nio.file.StandardOpenOption.*;
 import static org.kie.commons.validation.Preconditions.*;
 
 public class SimpleFileSystemProvider implements FileSystemProvider {
@@ -206,9 +207,13 @@ public class SimpleFileSystemProvider implements FileSystemProvider {
                                                final FileAttribute<?>... attrs )
             throws IllegalArgumentException, UnsupportedOperationException, FileAlreadyExistsException, IOException, SecurityException {
         final File file = checkNotNull( "path", path ).toFile();
+
         if ( file.exists() ) {
-            throw new FileAlreadyExistsException( "" );
+            if ( !( options != null && options.contains( TRUNCATE_EXISTING ) ) ) {
+                throw new FileAlreadyExistsException( path.toString() );
+            }
         }
+
         try {
             return new SeekableByteChannelFileBasedImpl( new RandomAccessFile( file, "rw" ).getChannel() ) {
                 @Override

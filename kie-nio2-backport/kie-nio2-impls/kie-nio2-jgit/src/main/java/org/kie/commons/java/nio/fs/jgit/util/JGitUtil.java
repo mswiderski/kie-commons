@@ -83,6 +83,7 @@ import org.kie.commons.java.nio.base.version.VersionAttributes;
 import org.kie.commons.java.nio.base.version.VersionRecord;
 import org.kie.commons.java.nio.file.NoSuchFileException;
 import org.kie.commons.java.nio.file.attribute.FileTime;
+import org.kie.commons.java.nio.fs.jgit.JGitFileSystem;
 
 import static java.util.Collections.*;
 import static org.eclipse.jgit.api.MergeResult.*;
@@ -424,6 +425,30 @@ public final class JGitUtil {
         return inCoreIndex;
     }
 
+    public static ObjectId resolveObjectId( final Git git,
+                                            final String name ) {
+
+        try {
+            final Ref refName = getBranch( git, name );
+            if ( refName != null ) {
+                return refName.getObjectId();
+            }
+
+            try {
+                final ObjectId id = ObjectId.fromString( name );
+                if ( git.getRepository().getObjectDatabase().has( id ) ) {
+                    return id;
+                }
+            } catch ( final IllegalArgumentException ex ) {
+            }
+
+            return null;
+        } catch ( java.io.IOException e ) {
+        }
+
+        return null;
+    }
+
     public static Ref getBranch( final Git git,
                                  final String name ) {
 
@@ -444,10 +469,10 @@ public final class JGitUtil {
         }
     }
 
-    public static VersionAttributes buildVersionAttributes( final Git git,
+    public static VersionAttributes buildVersionAttributes( final JGitFileSystem fs,
                                                             final String branchName,
                                                             final String path ) {
-        final JGitPathInfo pathInfo = resolvePath( git, branchName, path );
+        final JGitPathInfo pathInfo = resolvePath( fs.gitRepo(), branchName, path );
 
         if ( pathInfo == null ) {
             throw new NoSuchFileException( path );
@@ -455,13 +480,13 @@ public final class JGitUtil {
 
         final String gPath = fixPath( path );
 
-        final Ref branchRef = getBranch( git, branchName );
+        final ObjectId id = resolveObjectId( fs.gitRepo(), branchName );
 
         final List<VersionRecord> records = new ArrayList<VersionRecord>();
 
-        if ( branchRef != null ) {
+        if ( id != null ) {
             try {
-                final LogCommand logCommand = git.log().add( branchRef.getObjectId() );
+                final LogCommand logCommand = fs.gitRepo().log().add( id );
                 if ( !gPath.isEmpty() ) {
                     logCommand.addPath( gPath );
                 }
@@ -471,7 +496,7 @@ public final class JGitUtil {
                     records.add( new VersionRecord() {
                         @Override
                         public String id() {
-                            return commit.getId().toString();
+                            return commit.name();
                         }
 
                         @Override
@@ -487,6 +512,11 @@ public final class JGitUtil {
                         @Override
                         public Date date() {
                             return commit.getCommitterIdent().getWhen();
+                        }
+
+                        @Override
+                        public String uri() {
+                            return fs.getPath( commit.name(), path ).toUri().toString();
                         }
                     } );
                 }

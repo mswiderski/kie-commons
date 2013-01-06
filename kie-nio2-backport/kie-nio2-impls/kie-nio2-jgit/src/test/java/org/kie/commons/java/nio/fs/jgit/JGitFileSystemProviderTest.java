@@ -801,7 +801,10 @@ public class JGitFileSystemProviderTest extends AbstractTestInfra {
         outStream3.write( "my cool content".getBytes() );
         outStream3.close();
 
-        final BasicFileAttributeView attrs = PROVIDER.getFileAttributeView( path3, BasicFileAttributeView.class );
+        final JGitVersionAttributeView attrs = PROVIDER.getFileAttributeView( path3, JGitVersionAttributeView.class );
+
+        assertThat( attrs.readAttributes().history().size() ).isEqualTo( 1 );
+        assertThat( attrs.readAttributes().history().get( 0 ).uri() ).isNotNull();
 
         assertThat( attrs.readAttributes().isDirectory() ).isFalse();
         assertThat( attrs.readAttributes().isRegularFile() ).isTrue();
