@@ -18,6 +18,7 @@ import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
 import org.kie.commons.java.nio.file.attribute.FileTime;
 
 import static org.kie.commons.data.Pair.*;
+import static org.kie.commons.io.attribute.DublinCoreAttributesUtil.*;
 import static org.kie.commons.validation.PortablePreconditions.*;
 
 /**
@@ -27,23 +28,23 @@ public class DublinCoreView
         extends AbstractBasicFileAttributeView<AbstractPath>
         implements NeedsPreloadedAttrs {
 
-    private static final String TITLE              = "dcore.title";
-    private static final String CREATOR            = "dcore.creator";
-    private static final String SUBJECT            = "dcore.subject";
-    private static final String DESCRIPTION        = "dcore.description";
-    private static final String PUBLISHER          = "dcore.publisher";
-    private static final String CONTRIBUTOR        = "dcore.contributor";
-    private static final String TYPE               = "dcore.type";
-    private static final String FORMAT             = "dcore.format";
-    private static final String IDENTIFIER         = "dcore.identifier";
-    private static final String SOURCE             = "dcore.source";
-    private static final String LANGUAGE           = "dcore.language";
-    private static final String RELATION           = "dcore.relation";
-    private static final String COVERAGE           = "dcore.coverage";
-    private static final String RIGHTS             = "dcore.rights";
-    private static final String LAST_MODIFIED_TIME = "lastModifiedTime";
-    private static final String LAST_ACCESS_TIME   = "lastAccessTime";
-    private static final String CREATION_TIME      = "creationTime";
+    static final String TITLE              = "dcore.title";
+    static final String CREATOR            = "dcore.creator";
+    static final String SUBJECT            = "dcore.subject";
+    static final String DESCRIPTION        = "dcore.description";
+    static final String PUBLISHER          = "dcore.publisher";
+    static final String CONTRIBUTOR        = "dcore.contributor";
+    static final String TYPE               = "dcore.type";
+    static final String FORMAT             = "dcore.format";
+    static final String IDENTIFIER         = "dcore.identifier";
+    static final String SOURCE             = "dcore.source";
+    static final String LANGUAGE           = "dcore.language";
+    static final String RELATION           = "dcore.relation";
+    static final String COVERAGE           = "dcore.coverage";
+    static final String RIGHTS             = "dcore.rights";
+    static final String LAST_MODIFIED_TIME = "lastModifiedTime";
+    static final String LAST_ACCESS_TIME   = "lastAccessTime";
+    static final String CREATION_TIME      = "creationTime";
 
     private static final Set<String> PROPERTIES = new HashSet<String>() {{
         add( TITLE );
@@ -262,122 +263,12 @@ public class DublinCoreView
 
     @Override
     public Map<String, Object> readAttributes( final String... attributes ) {
-        final DublinCoreAttributes attrs = readAttributes();
-
-        return new HashMap<String, Object>() {{
-            for ( final String attribute : attributes ) {
-                checkNotEmpty( "attribute", attribute );
-
-                if ( attribute.equals( "*" ) || attribute.equals( TITLE ) ) {
-                    for ( int i = 0; i < attrs.titles().size(); i++ ) {
-                        final String content = attrs.titles().get( i );
-                        put( buildAttrName( TITLE, i ), content );
-                    }
-                }
-                if ( attribute.equals( "*" ) || attribute.equals( CREATOR ) ) {
-                    for ( int i = 0; i < attrs.creators().size(); i++ ) {
-                        final String content = attrs.creators().get( i );
-                        put( buildAttrName( CREATOR, i ), content );
-                    }
-                }
-                if ( attribute.equals( "*" ) || attribute.equals( SUBJECT ) ) {
-                    for ( int i = 0; i < attrs.subjects().size(); i++ ) {
-                        final String content = attrs.subjects().get( i );
-                        put( buildAttrName( SUBJECT, i ), content );
-                    }
-                }
-                if ( attribute.equals( "*" ) || attribute.equals( DESCRIPTION ) ) {
-                    for ( int i = 0; i < attrs.descriptions().size(); i++ ) {
-                        final String content = attrs.descriptions().get( i );
-                        put( buildAttrName( DESCRIPTION, i ), content );
-                    }
-                }
-                if ( attribute.equals( "*" ) || attribute.equals( PUBLISHER ) ) {
-                    for ( int i = 0; i < attrs.publishers().size(); i++ ) {
-                        final String content = attrs.publishers().get( i );
-                        put( buildAttrName( PUBLISHER, i ), content );
-                    }
-                }
-                if ( attribute.equals( "*" ) || attribute.equals( CONTRIBUTOR ) ) {
-                    for ( int i = 0; i < attrs.contributors().size(); i++ ) {
-                        final String content = attrs.contributors().get( i );
-                        put( buildAttrName( CONTRIBUTOR, i ), content );
-                    }
-                }
-
-                if ( attribute.equals( "*" ) || attribute.equals( LAST_MODIFIED_TIME ) ) {
-                    put( LAST_MODIFIED_TIME, null );
-                }
-                if ( attribute.equals( "*" ) || attribute.equals( LAST_ACCESS_TIME ) ) {
-                    put( LAST_ACCESS_TIME, null );
-                }
-                if ( attribute.equals( "*" ) || attribute.equals( CREATION_TIME ) ) {
-                    put( CREATION_TIME, null );
-                }
-
-                if ( attribute.equals( "*" ) || attribute.equals( TYPE ) ) {
-                    for ( int i = 0; i < attrs.types().size(); i++ ) {
-                        final String content = attrs.types().get( i );
-                        put( buildAttrName( TYPE, i ), content );
-                    }
-                }
-                if ( attribute.equals( "*" ) || attribute.equals( FORMAT ) ) {
-                    for ( int i = 0; i < attrs.formats().size(); i++ ) {
-                        final String content = attrs.formats().get( i );
-                        put( buildAttrName( FORMAT, i ), content );
-                    }
-                }
-                if ( attribute.equals( "*" ) || attribute.equals( IDENTIFIER ) ) {
-                    for ( int i = 0; i < attrs.identifiers().size(); i++ ) {
-                        final String content = attrs.identifiers().get( i );
-                        put( buildAttrName( IDENTIFIER, i ), content );
-                    }
-                }
-                if ( attribute.equals( "*" ) || attribute.equals( SOURCE ) ) {
-                    for ( int i = 0; i < attrs.sources().size(); i++ ) {
-                        final String content = attrs.sources().get( i );
-                        put( buildAttrName( SOURCE, i ), content );
-                    }
-                }
-                if ( attribute.equals( "*" ) || attribute.equals( LANGUAGE ) ) {
-                    for ( int i = 0; i < attrs.languages().size(); i++ ) {
-                        final String content = attrs.languages().get( i );
-                        put( buildAttrName( LANGUAGE, i ), content );
-                    }
-                }
-                if ( attribute.equals( "*" ) || attribute.equals( RELATION ) ) {
-                    for ( int i = 0; i < attrs.relations().size(); i++ ) {
-                        final String content = attrs.relations().get( i );
-                        put( buildAttrName( RELATION, i ), content );
-                    }
-                }
-                if ( attribute.equals( "*" ) || attribute.equals( COVERAGE ) ) {
-                    for ( int i = 0; i < attrs.coverages().size(); i++ ) {
-                        final String content = attrs.coverages().get( i );
-                        put( buildAttrName( COVERAGE, i ), content );
-                    }
-                }
-                if ( attribute.equals( "*" ) || attribute.equals( RIGHTS ) ) {
-                    for ( int i = 0; i < attrs.rights().size(); i++ ) {
-                        final String content = attrs.rights().get( i );
-                        put( buildAttrName( RIGHTS, i ), content );
-                    }
-                }
-                if ( attribute.equals( "*" ) ) {
-                    break;
-                }
-            }
-        }};
+        return toMap( readAttributes(), attributes );
     }
 
     @Override
     public Class<? extends BasicFileAttributeView>[] viewTypes() {
         return new Class[]{ DublinCoreView.class };
-    }
-
-    private String buildAttrName( final String title,
-                                  final int i ) {
-        return title + "[" + i + "]";
     }
 
     @Override

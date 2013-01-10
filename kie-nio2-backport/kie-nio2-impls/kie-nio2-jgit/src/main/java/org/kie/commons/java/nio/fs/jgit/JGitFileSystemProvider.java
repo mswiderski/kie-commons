@@ -24,10 +24,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +76,8 @@ import org.kie.commons.java.nio.file.NotDirectoryException;
 import org.kie.commons.java.nio.file.NotLinkException;
 import org.kie.commons.java.nio.file.OpenOption;
 import org.kie.commons.java.nio.file.Path;
+import org.kie.commons.java.nio.file.StandardCopyOption;
+import org.kie.commons.java.nio.file.StandardOpenOption;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributeView;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
 import org.kie.commons.java.nio.file.attribute.FileAttribute;
@@ -696,7 +700,9 @@ public class JGitFileSystemProvider implements FileSystemProvider {
         final Pair<PathType, ObjectId> targetResult = checkPath( target.getFileSystem().gitRepo(), target.getRefTree(), target.getPath() );
 
         if ( !isRoot( target ) && targetResult.getK1() != NOT_FOUND ) {
-            throw new FileAlreadyExistsException( target.toString() );
+            if ( !contains( options, StandardCopyOption.REPLACE_EXISTING ) ) {
+                throw new FileAlreadyExistsException( target.toString() );
+            }
         }
 
         if ( sourceResult.getK1() == NOT_FOUND ) {
@@ -709,6 +715,16 @@ public class JGitFileSystemProvider implements FileSystemProvider {
         }
 
         copyFile( source, target, options );
+    }
+
+    private boolean contains( final CopyOption[] options,
+                              final CopyOption opt ) {
+        for ( final CopyOption option : options ) {
+            if ( option.equals( opt ) ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void copyDirectory( final JGitPathImpl source,
@@ -745,13 +761,20 @@ public class JGitFileSystemProvider implements FileSystemProvider {
                            final CopyOption... options ) {
 
         final InputStream in = newInputStream( source, convert( options ) );
-        final OutputStream out = newOutputStream( target, convert( options ) );
+        final SeekableByteChannel out = newByteChannel( target, new HashSet<OpenOption>() {{
+            add( StandardOpenOption.TRUNCATE_EXISTING );
+            for ( final CopyOption _option : options ) {
+                if ( _option instanceof OpenOption ) {
+                    add( (OpenOption) _option );
+                }
+            }
+        }} );
 
         try {
             int count;
             byte[] buffer = new byte[ 8192 ];
             while ( ( count = in.read( buffer ) ) > 0 ) {
-                out.write( buffer, 0, count );
+                out.write( ByteBuffer.wrap( buffer, 0, count ) );
             }
             out.close();
         } catch ( Exception e ) {

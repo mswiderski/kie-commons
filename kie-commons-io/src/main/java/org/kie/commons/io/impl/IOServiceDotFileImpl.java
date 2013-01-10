@@ -120,11 +120,14 @@ public class IOServiceDotFileImpl
                                    final CopyOption... options )
             throws UnsupportedOperationException, FileAlreadyExistsException,
             DirectoryNotEmptyException, IOException, SecurityException {
-        final Path result = Files.copy( source, target, buildOptions( options ) );
 
         if ( Files.exists( dot( source ) ) ) {
             Files.copy( dot( source ), dot( target ), forceBuildOptions( options ) );
+        } else if ( Files.exists( dot( target ) ) ) {
+            Files.delete( dot( target ) );
         }
+
+        final Path result = Files.copy( source, target, buildOptions( options ) );
 
         return result;
     }
@@ -135,11 +138,13 @@ public class IOServiceDotFileImpl
                                    final CopyOption... options )
             throws UnsupportedOperationException, FileAlreadyExistsException,
             DirectoryNotEmptyException, AtomicMoveNotSupportedException, IOException, SecurityException {
-        final Path result = Files.move( source, target, options );
-
         if ( Files.exists( dot( source ) ) ) {
             Files.move( dot( source ), dot( target ), forceBuildOptions( options ) );
+        } else if ( Files.exists( dot( target ) ) ) {
+            Files.delete( dot( target ) );
         }
+
+        final Path result = Files.move( source, target, options );
 
         return result;
     }
