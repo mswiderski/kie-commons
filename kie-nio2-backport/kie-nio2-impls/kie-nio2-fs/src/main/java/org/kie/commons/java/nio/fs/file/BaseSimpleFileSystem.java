@@ -95,8 +95,8 @@ public abstract class BaseSimpleFileSystem implements FileSystem {
     @Override
     public Path getPath( String first,
                          String... more ) throws InvalidPathException {
-        if ( more == null ) {
-            return GeneralPathImpl.create( this, first, false );
+        if ( more == null || more.length == 0 ) {
+            return GeneralPathImpl.create( this, removeTrailingSlash( first ), false );
         }
         final StringBuilder sb = new StringBuilder();
         sb.append( first );
@@ -109,6 +109,19 @@ public abstract class BaseSimpleFileSystem implements FileSystem {
             }
         }
         return GeneralPathImpl.create( this, sb.toString(), false );
+    }
+
+    private String removeTrailingSlash( final String path ) {
+        for ( final File root : roots ) {
+            if ( root.toString().equals( path ) ) {
+                return path;
+            }
+        }
+        if ( path.endsWith( getSeparator() ) ) {
+            return path.substring( 0, path.length() - getSeparator().length() );
+        }
+
+        return path;
     }
 
     @Override

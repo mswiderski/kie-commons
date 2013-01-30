@@ -16,6 +16,8 @@
 
 package org.kie.commons.java.nio.fs.file;
 
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -59,6 +61,26 @@ public class SimpleUnixFileSystemTest {
         assertThat( fileSystem.getRootDirectories() ).isNotNull().hasSize( 1 );
         assertThat( fileSystem.getRootDirectories().iterator().next().toString() ).isEqualTo( "/" );
         assertThat( fileSystem.getRootDirectories().iterator().next().isAbsolute() ).isTrue();
+    }
+
+    @Test
+    public void simpleRootTests() throws URISyntaxException {
+        final SimpleFileSystemProvider fs = new SimpleFileSystemProvider();
+
+        final FileSystem fileSystem = new SimpleUnixFileSystem( fsProvider, "/" );
+        assertThat( fileSystem.getPath( "/" ) ).isEqualTo( fileSystem.getPath( "/path" ).getParent() );
+
+        final URL parentUrl = this.getClass().getResource( "/" );
+        final Path parentNioPath = fs.getPath( parentUrl.toURI() );
+
+        final URL childUrl = this.getClass().getResource( "/Folder" );
+        final Path childNioPath = fs.getPath( childUrl.toURI() );
+        final Path childParentNioPath = childNioPath.getParent();
+
+        System.out.println( parentNioPath );
+
+        assertThat( parentNioPath ).isEqualTo( childParentNioPath );
+
     }
 
     @Test(expected = IllegalArgumentException.class)
