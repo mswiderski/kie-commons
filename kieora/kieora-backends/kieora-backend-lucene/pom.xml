@@ -15,10 +15,6 @@
   <name>Kieora Lucene Backend</name>
   <description>Kieora Lucene Backend</description>
 
-  <properties>
-    <mapdb.version>0.9-SNAPSHOT</mapdb.version>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.lucene</groupId>
@@ -36,12 +32,6 @@
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-queryparser</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.mapdb</groupId>
-      <artifactId>mapdb</artifactId>
-      <version>${mapdb.version}</version>
-    </dependency>
-
     <dependency>
       <groupId>org.kie.commons</groupId>
       <artifactId>kie-commons-validation</artifactId>
