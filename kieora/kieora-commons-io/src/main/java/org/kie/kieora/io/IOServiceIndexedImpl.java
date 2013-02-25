@@ -16,6 +16,7 @@
 
 package org.kie.kieora.io;
 
+import java.nio.ByteBuffer;
 import java.util.Set;
 
 import org.kie.commons.io.impl.IOServiceDotFileImpl;
@@ -31,6 +32,7 @@ import org.kie.commons.java.nio.file.NoSuchFileException;
 import org.kie.commons.java.nio.file.OpenOption;
 import org.kie.commons.java.nio.file.Path;
 import org.kie.commons.java.nio.file.attribute.FileAttribute;
+import org.kie.commons.java.nio.file.attribute.FileAttributeView;
 import org.kie.kieora.engine.MetaIndexEngine;
 
 import static org.kie.commons.java.nio.base.dotfiles.DotFileUtils.*;
@@ -41,8 +43,12 @@ public class IOServiceIndexedImpl extends IOServiceDotFileImpl {
 
     private final MetaIndexEngine indexEngine;
 
-    public IOServiceIndexedImpl( final MetaIndexEngine indexEngine ) {
+    private final Class<? extends FileAttributeView>[] views;
+
+    public IOServiceIndexedImpl( final MetaIndexEngine indexEngine,
+                                 Class<? extends FileAttributeView>... views ) {
         this.indexEngine = checkNotNull( "indexEngine", indexEngine );
+        this.views = views;
     }
 
     @Override
@@ -71,21 +77,57 @@ public class IOServiceIndexedImpl extends IOServiceDotFileImpl {
             FileAlreadyExistsException, IOException, SecurityException {
         checkNotNull( "path", path );
 
-        final Properties properties = new Properties();
-        if ( exists( dot( path ) ) ) {
-            properties.load( newInputStream( dot( path ) ) );
-        }
-        final FileAttribute<?>[] allAttrs = consolidate( properties, attrs );
+        final SeekableByteChannel byteChannel = super.newByteChannel( path, options, attrs );
 
-        final SeekableByteChannel result = Files.newByteChannel( path, buildOptions( options ), allAttrs );
+        return new SeekableByteChannel() {
+            @Override
+            public long position() throws IOException {
+                return byteChannel.position();
+            }
 
-        if ( isFileScheme( path ) ) {
-            buildDotFile( path, newOutputStream( dot( path ) ), allAttrs );
-        }
+            @Override
+            public SeekableByteChannel position( final long newPosition ) throws IOException {
+                return byteChannel.position( newPosition );
+            }
 
-        indexEngine.index( toKObject( path, allAttrs ) );
+            @Override
+            public long size() throws IOException {
+                return byteChannel.size();
+            }
 
-        return result;
+            @Override
+            public SeekableByteChannel truncate( final long size ) throws IOException {
+                return byteChannel.truncate( size );
+            }
+
+            @Override
+            public int read( final ByteBuffer dst ) throws java.io.IOException {
+                return byteChannel.read( dst );
+            }
+
+            @Override
+            public int write( final ByteBuffer src ) throws java.io.IOException {
+                return byteChannel.write( src );
+            }
+
+            @Override
+            public boolean isOpen() {
+                return byteChannel.isOpen();
+            }
+
+            @Override
+            public void close() throws java.io.IOException {
+                byteChannel.close();
+                //force load attrs
+                for ( final Class<? extends FileAttributeView> view : views ) {
+                    IOServiceIndexedImpl.super.getFileAttributeView( path, view );
+                }
+
+                final FileAttribute<?>[] allAttrs = convert( IOServiceIndexedImpl.this.readAttributes( path ) );
+
+                indexEngine.index( toKObject( path, allAttrs ) );
+            }
+        };
     }
 
     @Override

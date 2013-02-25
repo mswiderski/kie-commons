@@ -28,6 +28,7 @@ import org.apache.lucene.document.StoredField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexableField;
+import org.kie.commons.java.nio.base.version.VersionHistory;
 import org.kie.kieora.backend.lucene.FieldFactory;
 import org.kie.kieora.model.KProperty;
 
@@ -36,48 +37,53 @@ import static org.kie.kieora.backend.lucene.util.Serializer.*;
 public class SimpleFieldFactory implements FieldFactory {
 
     @Override
-    public IndexableField build( final KProperty<?> property ) {
+    public IndexableField[] build( final KProperty<?> property ) {
 
         if ( property.getValue().getClass() == String.class ) {
             if ( property.isSearchable() ) {
-                return new TextField( property.getName(), property.getValue().toString(), Field.Store.YES );
+                return new IndexableField[]{ new TextField( property.getName(), property.getValue().toString(), Field.Store.YES ) };
             }
-            return new StringField( property.getName(), property.getValue().toString(), Field.Store.YES );
+            return new IndexableField[]{ new StringField( property.getName(), property.getValue().toString(), Field.Store.YES ) };
         }
 
         if ( property.getValue().getClass() == Integer.class ) {
             if ( property.isSearchable() ) {
-                return new IntField( property.getName(), (Integer) property.getValue(), Field.Store.YES );
+                return new IndexableField[]{ new IntField( property.getName(), (Integer) property.getValue(), Field.Store.YES ) };
             }
-            return new StoredField( property.getName(), (Integer) property.getValue() );
+            return new IndexableField[]{ new StoredField( property.getName(), (Integer) property.getValue() ) };
         }
 
         if ( property.getValue().getClass() == Long.class ) {
             if ( property.isSearchable() ) {
-                return new LongField( property.getName(), (Long) property.getValue(), Field.Store.YES );
+                return new IndexableField[]{ new LongField( property.getName(), (Long) property.getValue(), Field.Store.YES ) };
             }
-            return new StoredField( property.getName(), (Long) property.getValue() );
+            return new IndexableField[]{ new StoredField( property.getName(), (Long) property.getValue() ) };
         }
 
         if ( property.getValue().getClass() == Double.class ) {
             if ( property.isSearchable() ) {
-                return new DoubleField( property.getName(), (Double) property.getValue(), Field.Store.YES );
+                return new IndexableField[]{ new DoubleField( property.getName(), (Double) property.getValue(), Field.Store.YES ) };
             }
-            return new StoredField( property.getName(), (Double) property.getValue() );
+            return new IndexableField[]{ new StoredField( property.getName(), (Double) property.getValue() ) };
         }
 
         if ( property.getValue().getClass() == Float.class ) {
             if ( property.isSearchable() ) {
-                return new FloatField( property.getName(), (Float) property.getValue(), Field.Store.YES );
+                return new IndexableField[]{ new FloatField( property.getName(), (Float) property.getValue(), Field.Store.YES ) };
             }
-            return new StoredField( property.getName(), (Float) property.getValue() );
+            return new IndexableField[]{ new StoredField( property.getName(), (Float) property.getValue() ) };
         }
 
         if ( Date.class.isAssignableFrom( property.getValue().getClass() ) ) {
             if ( property.isSearchable() ) {
-                return new LongField( property.getName(), ( (Date) property.getValue() ).getTime(), Field.Store.YES );
+                return new IndexableField[]{ new LongField( property.getName(), ( (Date) property.getValue() ).getTime(), Field.Store.YES ) };
             }
-            return new StoredField( property.getName(), ( (Date) property.getValue() ).getTime() );
+            return new IndexableField[]{ new StoredField( property.getName(), ( (Date) property.getValue() ).getTime() ) };
+        }
+
+        if ( VersionHistory.class.isAssignableFrom( property.getValue().getClass() ) ) {
+            final VersionHistory versionHistory = (VersionHistory) property.getValue();
+            return build( versionHistory );
         }
 
         if ( Collection.class.isAssignableFrom( property.getValue().getClass() ) ) {
@@ -87,16 +93,111 @@ public class SimpleFieldFactory implements FieldFactory {
             }
 
             if ( property.isSearchable() ) {
-                return new TextField( property.getName(), sb.toString(), Field.Store.YES );
+                return new IndexableField[]{ new TextField( property.getName(), sb.toString(), Field.Store.YES ) };
             }
-            return new StringField( property.getName(), sb.toString(), Field.Store.YES );
+            return new IndexableField[]{ new StringField( property.getName(), sb.toString(), Field.Store.YES ) };
         }
 
         try {
-            return new StoredField( property.getName(), toByteArray( property.getValue() ) );
+            return new IndexableField[]{ new StoredField( property.getName(), toByteArray( property.getValue() ) ) };
         } catch ( final Exception ex ) {
-            return new StoredField( property.getName(), property.getValue().toString() );
+            return new IndexableField[]{ new StoredField( property.getName(), property.getValue().toString() ) };
         }
+    }
+
+    private IndexableField[] build( final VersionHistory versionHistory ) {
+        if ( versionHistory.records().size() == 0 ) {
+            return new IndexableField[]{ };
+        }
+
+        final int lastIndex = versionHistory.records().size() - 1;
+        final IndexableField checkinComment = build( new KProperty<String>() {
+            @Override
+            public String getName() {
+                return "checkinComment";
+            }
+
+            @Override
+            public String getValue() {
+                return versionHistory.records().get( lastIndex ).comment();
+            }
+
+            @Override
+            public boolean isSearchable() {
+                return true;
+            }
+        } )[ 0 ];
+
+        final IndexableField lastModifiedBy = build( new KProperty<String>() {
+            @Override
+            public String getName() {
+                return "lastModifiedBy";
+            }
+
+            @Override
+            public String getValue() {
+                return versionHistory.records().get( lastIndex ).author();
+            }
+
+            @Override
+            public boolean isSearchable() {
+                return true;
+            }
+        } )[ 0 ];
+
+        final IndexableField createdBy = build( new KProperty<String>() {
+            @Override
+            public String getName() {
+                return "createdBy";
+            }
+
+            @Override
+            public String getValue() {
+                return versionHistory.records().get( 0 ).author();
+            }
+
+            @Override
+            public boolean isSearchable() {
+                return true;
+            }
+        } )[ 0 ];
+
+        final IndexableField createdDate = build( new KProperty<Date>() {
+            @Override
+            public String getName() {
+                return "createdDate";
+            }
+
+            @Override
+            public Date getValue() {
+                return versionHistory.records().get( 0 ).date();
+            }
+
+            @Override
+            public boolean isSearchable() {
+                return true;
+            }
+        } )[ 0 ];
+
+        final IndexableField lastModifiedDate = build( new KProperty<Date>() {
+            @Override
+            public String getName() {
+                return "lastModifiedDate";
+            }
+
+            @Override
+            public Date getValue() {
+                return versionHistory.records().get( lastIndex ).date();
+            }
+
+            @Override
+            public boolean isSearchable() {
+                return true;
+            }
+        } )[ 0 ];
+
+        return new IndexableField[]{ checkinComment, lastModifiedBy, createdBy, createdDate, lastModifiedDate };
+
     }
 
 }

@@ -803,8 +803,8 @@ public class JGitFileSystemProviderTest extends AbstractTestInfra {
 
         final JGitVersionAttributeView attrs = PROVIDER.getFileAttributeView( path3, JGitVersionAttributeView.class );
 
-        assertThat( attrs.readAttributes().history().size() ).isEqualTo( 1 );
-        assertThat( attrs.readAttributes().history().get( 0 ).uri() ).isNotNull();
+        assertThat( attrs.readAttributes().history().records().size() ).isEqualTo( 1 );
+        assertThat( attrs.readAttributes().history().records().get( 0 ).uri() ).isNotNull();
 
         assertThat( attrs.readAttributes().isDirectory() ).isFalse();
         assertThat( attrs.readAttributes().isRegularFile() ).isTrue();

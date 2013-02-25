@@ -32,6 +32,8 @@ import org.apache.lucene.search.TopScoreDocCollector;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.kie.commons.io.IOService;
+import org.kie.commons.io.attribute.DublinCoreView;
+import org.kie.commons.java.nio.base.version.VersionAttributeView;
 import org.kie.commons.java.nio.file.OpenOption;
 import org.kie.commons.java.nio.file.Path;
 import org.kie.commons.java.nio.file.attribute.FileAttribute;
@@ -60,7 +62,7 @@ public class BatchIndexTest {
             metaModelStore = new InMemoryMetaModelStore();
             luceneSetup = new RAMLuceneSetup();
             indexEngine = new LuceneIndexEngine( metaModelStore, luceneSetup, new SimpleFieldFactory() );
-            ioService = new IOServiceIndexedImpl( indexEngine );
+            ioService = new IOServiceIndexedImpl( indexEngine, DublinCoreView.class, VersionAttributeView.class );
         }
         return ioService;
     }

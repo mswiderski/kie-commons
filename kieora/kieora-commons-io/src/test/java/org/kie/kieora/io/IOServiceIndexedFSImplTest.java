@@ -26,9 +26,12 @@ import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopScoreDocCollector;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.kie.commons.io.IOService;
 import org.kie.commons.io.SimpleFSIOServiceDotFileTest;
+import org.kie.commons.io.attribute.DublinCoreView;
+import org.kie.commons.java.nio.base.version.VersionAttributeView;
 import org.kie.commons.java.nio.file.OpenOption;
 import org.kie.commons.java.nio.file.Path;
 import org.kie.commons.java.nio.file.attribute.FileAttribute;
@@ -38,13 +41,13 @@ import org.kie.kieora.backend.lucene.metamodels.InMemoryMetaModelStore;
 import org.kie.kieora.backend.lucene.setups.BaseLuceneSetup;
 import org.kie.kieora.backend.lucene.setups.RAMLuceneSetup;
 import org.kie.kieora.engine.MetaModelStore;
-import org.kie.kieora.io.IOServiceIndexedImpl;
 
 import static org.junit.Assert.*;
 
 /**
  *
  */
+@Ignore
 public class IOServiceIndexedFSImplTest extends SimpleFSIOServiceDotFileTest {
 
     protected static IOService ioService = null;
@@ -56,7 +59,7 @@ public class IOServiceIndexedFSImplTest extends SimpleFSIOServiceDotFileTest {
         if ( ioService == null ) {
             metaModelStore = new InMemoryMetaModelStore();
             luceneSetup = new RAMLuceneSetup();
-            ioService = new IOServiceIndexedImpl( new LuceneIndexEngine( metaModelStore, luceneSetup, new SimpleFieldFactory() ) );
+            ioService = new IOServiceIndexedImpl( new LuceneIndexEngine( metaModelStore, luceneSetup, new SimpleFieldFactory() ), DublinCoreView.class, VersionAttributeView.class );
         }
         return ioService;
     }

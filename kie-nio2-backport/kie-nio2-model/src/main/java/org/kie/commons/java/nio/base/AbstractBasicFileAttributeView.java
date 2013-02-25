@@ -105,13 +105,13 @@ public abstract class AbstractBasicFileAttributeView<P extends Path>
                     put( FILE_KEY, attrs.fileKey() );
                 }
                 if ( attribute.equals( "*" ) || attribute.equals( LAST_MODIFIED_TIME ) ) {
-                    put( LAST_MODIFIED_TIME, null );
+                    put( LAST_MODIFIED_TIME, attrs.lastModifiedTime() );
                 }
                 if ( attribute.equals( "*" ) || attribute.equals( LAST_ACCESS_TIME ) ) {
-                    put( LAST_ACCESS_TIME, null );
+                    put( LAST_ACCESS_TIME, attrs.lastAccessTime() );
                 }
                 if ( attribute.equals( "*" ) || attribute.equals( CREATION_TIME ) ) {
-                    put( CREATION_TIME, null );
+                    put( CREATION_TIME, attrs.creationTime() );
                 }
                 if ( attribute.equals( "*" ) ) {
                     break;

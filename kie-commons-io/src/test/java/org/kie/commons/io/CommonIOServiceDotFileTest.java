@@ -540,16 +540,16 @@ public abstract class CommonIOServiceDotFileTest {
 
         assertNotNull( ioService().getFileAttributeView( file, BasicFileAttributeView.class ) );
         assertNull( ioService().getFileAttributeView( file, MyAttrsView.class ) );
-        assertNotNull( ioService().getFileAttributeView( file, DublinCoreView.class ) );
+        assertNotNull( ioService().getFileAttributeView( file, XDublinCoreView.class ) );
 
-        final DublinCoreAttributes attr = ioService().getFileAttributeView( file, DublinCoreView.class ).readAttributes();
+        final DublinCoreAttributes attr = ioService().getFileAttributeView( file, XDublinCoreView.class ).readAttributes();
         assertEquals( "AuthorName", attr.getAuthor() );
 
         ( (AttrHolder) file ).getAttrStorage().clear();
 
         assertNotNull( ioService().getFileAttributeView( file, BasicFileAttributeView.class ) );
         assertNull( ioService().getFileAttributeView( file, MyAttrsView.class ) );
-        assertNotNull( ioService().getFileAttributeView( file, DublinCoreView.class ) );
+        assertNotNull( ioService().getFileAttributeView( file, XDublinCoreView.class ) );
     }
 
     public abstract Path getFilePath();
@@ -580,12 +580,12 @@ public abstract class CommonIOServiceDotFileTest {
 
     }
 
-    public static class DublinCoreView extends AbstractBasicFileAttributeView<AbstractPath>
+    public static class XDublinCoreView extends AbstractBasicFileAttributeView<AbstractPath>
             implements NeedsPreloadedAttrs {
 
         private BasicFileAttributes attrs = null;
 
-        public DublinCoreView( final AbstractPath path ) {
+        public XDublinCoreView( final AbstractPath path ) {
             super( path );
         }
 
@@ -600,7 +600,7 @@ public abstract class CommonIOServiceDotFileTest {
 
         @Override
         public Class<? extends BasicFileAttributeView>[] viewTypes() {
-            return new Class[]{ DublinCoreView.class };
+            return new Class[]{ XDublinCoreView.class };
         }
     }
 

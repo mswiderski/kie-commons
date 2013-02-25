@@ -31,52 +31,52 @@ public class SimpleFSIOServiceDotFileTest extends CommonIOExceptionsServiceDotFi
 
     @Override
     protected int testFileAttrSize4() {
-        return 6;
+        return 7;
     }
 
     @Override
     protected int testFileAttrSize3() {
-        return 9;
+        return 10;
     }
 
     @Override
     protected int testFileAttrSize2() {
-        return 10;
+        return 11;
     }
 
     @Override
     protected int testFileAttrSize1() {
-        return 9;
-    }
-
-    @Override
-    protected int testDirectoryAttrSize4() {
-        return 6;
-    }
-
-    @Override
-    protected int testDirectoryAttrSize3() {
-        return 9;
-    }
-
-    @Override
-    protected int testDirectoryAttrSize2() {
         return 10;
     }
 
     @Override
+    protected int testDirectoryAttrSize4() {
+        return 7;
+    }
+
+    @Override
+    protected int testDirectoryAttrSize3() {
+        return 10;
+    }
+
+    @Override
+    protected int testDirectoryAttrSize2() {
+        return 11;
+    }
+
+    @Override
     protected int testDirectoryAttrSize1() {
-        return 9;
+        return 10;
     }
 
     @Override
     protected int createDirectoriesAttrSize() {
-        return 7;
+        return 8;
     }
 
     @Override
     protected int testNewByteChannelAttrSize() {
-        return 7;
+        return 8;
     }
 
     @Override

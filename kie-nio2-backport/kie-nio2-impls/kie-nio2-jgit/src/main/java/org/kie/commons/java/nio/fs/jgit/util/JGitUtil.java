@@ -80,6 +80,7 @@ import org.kie.commons.data.Pair;
 import org.kie.commons.java.nio.IOException;
 import org.kie.commons.java.nio.base.FileTimeImpl;
 import org.kie.commons.java.nio.base.version.VersionAttributes;
+import org.kie.commons.java.nio.base.version.VersionHistory;
 import org.kie.commons.java.nio.base.version.VersionRecord;
 import org.kie.commons.java.nio.file.NoSuchFileException;
 import org.kie.commons.java.nio.file.attribute.FileTime;
@@ -535,8 +536,13 @@ public final class JGitUtil {
 
         return new VersionAttributes() {
             @Override
-            public List<VersionRecord> history() {
-                return records;
+            public VersionHistory history() {
+                return new VersionHistory() {
+                    @Override
+                    public List<VersionRecord> records() {
+                        return records;
+                    }
+                };
             }
 
             @Override

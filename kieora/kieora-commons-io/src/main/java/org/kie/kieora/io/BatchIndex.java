@@ -26,6 +26,7 @@ import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
 import org.kie.kieora.engine.MetaIndexEngine;
 
 import static org.kie.commons.java.nio.base.dotfiles.DotFileUtils.*;
+import static org.kie.commons.java.nio.file.Files.walkFileTree;
 import static org.kie.commons.validation.PortablePreconditions.*;
 import static org.kie.kieora.io.KObjectUtil.*;
 
@@ -45,7 +46,7 @@ public final class BatchIndex {
 
     public void run() {
 
-        Files.walkFileTree( root, new SimpleFileVisitor<Path>() {
+        walkFileTree( root, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile( final Path file,
                                               final BasicFileAttributes attrs ) throws IOException {

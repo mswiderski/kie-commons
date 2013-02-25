@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 JBoss Inc
+ * Copyright 2013 JBoss Inc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package org.kie.kieora.backend.lucene;
+package org.kie.commons.java.nio.base.version;
 
-import org.apache.lucene.index.IndexableField;
-import org.kie.kieora.model.KProperty;
+import java.util.List;
 
 /**
  *
  */
-public interface FieldFactory {
+public interface VersionHistory {
 
-    IndexableField[] build( final KProperty<?> property );
+    List<VersionRecord> records();
+
 }
