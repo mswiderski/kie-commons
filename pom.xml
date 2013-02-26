@@ -52,6 +52,7 @@
     <module>kie-nio2-backport</module>
     <module>kie-commons-io</module>
     <module>kieora</module>
+    <module>kie-commons-admin</module>
   </modules>
 
   <build>
