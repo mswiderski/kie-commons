@@ -190,62 +190,13 @@ public class BatchIndexTest {
         }
 
         {
-            final Path dir = ioService().get( "git://temp-repo-test/some/cool/path/to/somewhere" );
-            ioService().createDirectories( dir, new FileAttribute<Object>() {
-                                               @Override
-                                               public String name() {
-                                                   return "dcore.author";
-                                               }
-
-                                               @Override
-                                               public Object value() {
-                                                   return "The BOSS";
-                                               }
-                                           }, new FileAttribute<Object>() {
-                                               @Override
-                                               public String name() {
-                                                   return "dcore.lastModification";
-                                               }
-
-                                               @Override
-                                               public Object value() {
-                                                   return new Date();
-                                               }
-                                           }, new FileAttribute<Object>() {
-                                               @Override
-                                               public String name() {
-                                                   return "dcore.comment";
-                                               }
-
-                                               @Override
-                                               public Object value() {
-                                                   return "ultra secret and restrictied directory.";
-                                               }
-                                           }
-                                         );
-        }
-        {
             final Path file = ioService().get( "git://temp-repo-test/xxx/simple.xls" );
             ioService().write( file, "plans!?" );
         }
-        {
-            final Path dir = ioService().get( "git://temp-repo-test/some/boring/path/to/somewhere" );
-            ioService().createDirectories( dir );
-        }
 
-        new BatchIndex( indexEngine, ioService().get( "git://temp-repo-test/" ) ).run();
+        new BatchIndex( indexEngine, ioService(), DublinCoreView.class, VersionAttributeView.class ).run( ioService().get( "git://temp-repo-test/" ) );
 
         final IndexSearcher searcher = luceneSetup.nrtSearcher();
-
-        {
-            final TopScoreDocCollector collector = TopScoreDocCollector.create( 10, true );
-
-            searcher.search( new TermQuery( new Term( "dcore.comment", "secret" ) ), collector );
-
-            final ScoreDoc[] hits = collector.topDocs().scoreDocs;
-
-            assertEquals( 1, hits.length );
-        }
 
         {
             final TopScoreDocCollector collector = TopScoreDocCollector.create( 10, true );

@@ -119,8 +119,4 @@ public abstract class BaseLuceneSetup implements LuceneSetup {
 
     public abstract IndexWriter writer();
 
-    public abstract IndexSearcher nrtSearcher();
-
-    public abstract void nrtRelease( final IndexSearcher searcher );
-
 }

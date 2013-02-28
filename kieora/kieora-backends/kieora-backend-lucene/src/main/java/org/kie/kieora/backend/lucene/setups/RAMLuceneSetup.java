@@ -24,6 +24,6 @@ import org.apache.lucene.store.RAMDirectory;
 public class RAMLuceneSetup extends DirectoryLuceneSetup {
 
     public RAMLuceneSetup() {
-        super( new RAMDirectory() );
+        super( new RAMDirectory(), true );
     }
 }

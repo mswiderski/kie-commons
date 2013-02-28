@@ -20,20 +20,23 @@ import java.util.concurrent.TimeUnit;
 
 import org.kie.commons.java.nio.file.attribute.FileTime;
 
-import static org.kie.commons.validation.Preconditions.*;
+import static org.kie.commons.validation.PortablePreconditions.*;
 
 public class FileTimeImpl implements FileTime {
 
-    private final long lastModified;
+    private Long lastModified;
 
-    public FileTimeImpl(final long lastModified) {
+    public FileTimeImpl() {
+    }
+
+    public FileTimeImpl( final long lastModified ) {
         this.lastModified = lastModified;
     }
 
     @Override
-    public long to(final TimeUnit unit) {
-        checkNotNull("unit", unit);
-        return unit.convert(lastModified, TimeUnit.MILLISECONDS);
+    public long to( final TimeUnit unit ) {
+        checkNotNull( "unit", unit );
+        return unit.convert( lastModified, TimeUnit.MILLISECONDS );
     }
 
     @Override
@@ -42,11 +45,11 @@ public class FileTimeImpl implements FileTime {
     }
 
     @Override
-    public int compareTo(final FileTime o) {
-        checkNotNull("o", o);
+    public int compareTo( final FileTime o ) {
+        checkNotNull( "o", o );
         final long thisVal = this.toMillis();
         final long anotherVal = o.toMillis();
-        return (thisVal < anotherVal ? -1 : (thisVal == anotherVal ? 0 : 1));
+        return ( thisVal < anotherVal ? -1 : ( thisVal == anotherVal ? 0 : 1 ) );
     }
 
 }

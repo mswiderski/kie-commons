@@ -454,7 +454,7 @@ public final class JGitUtil {
                                  final String name ) {
 
         try {
-            return git.getRepository().getRefDatabase().getRef( "refs/heads/" + name );
+            return git.getRepository().getRefDatabase().getRef( name );
         } catch ( java.io.IOException e ) {
         }
 

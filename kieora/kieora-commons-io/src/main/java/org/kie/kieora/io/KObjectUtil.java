@@ -20,12 +20,16 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
+import org.kie.commons.java.nio.base.FileSystemId;
+import org.kie.commons.java.nio.base.SegmentedPath;
 import org.kie.commons.java.nio.file.Path;
 import org.kie.commons.java.nio.file.attribute.FileAttribute;
 import org.kie.kieora.model.KObject;
 import org.kie.kieora.model.KObjectKey;
 import org.kie.kieora.model.KProperty;
 import org.kie.kieora.model.schema.MetaType;
+
+import static org.apache.commons.io.FilenameUtils.*;
 
 /**
  *
@@ -66,6 +70,16 @@ public final class KObjectUtil {
             }
 
             @Override
+            public String getClusterId() {
+                return ( (FileSystemId) path.getFileSystem() ).id();
+            }
+
+            @Override
+            public String getSegmentId() {
+                return ( (SegmentedPath) path ).getSegmentId();
+            }
+
+            @Override
             public String getKey() {
                 return path.toString();
             }
@@ -86,8 +100,18 @@ public final class KObjectUtil {
             }
 
             @Override
+            public String getClusterId() {
+                return ( (FileSystemId) path.getFileSystem() ).id();
+            }
+
+            @Override
+            public String getSegmentId() {
+                return ( (SegmentedPath) path ).getSegmentId();
+            }
+
+            @Override
             public String getKey() {
-                return path.toString();
+                return path.toUri().toString();
             }
 
             @Override
@@ -111,6 +135,64 @@ public final class KObjectUtil {
                             }
                         } );
                     }
+                    add( new KProperty<String>() {
+                        @Override
+                        public String getName() {
+                            return "filename";
+                        }
+
+                        @Override
+                        public String getValue() {
+                            if ( path.getFileName() == null ) {
+                                return "/";
+                            }
+                            return path.getFileName().toString();
+                        }
+
+                        @Override
+                        public boolean isSearchable() {
+                            return true;
+                        }
+                    } );
+                    add( new KProperty<String>() {
+                        @Override
+                        public String getName() {
+                            return "extension";
+                        }
+
+                        @Override
+                        public String getValue() {
+                            if ( path.getFileName() == null ) {
+                                return "";
+                            }
+                            return getExtension( path.getFileName().toString() );
+                        }
+
+                        @Override
+                        public boolean isSearchable() {
+                            return true;
+                        }
+                    } );
+                    add( new KProperty<String>() {
+                        @Override
+                        public String getName() {
+                            return "basename";
+                        }
+
+                        @Override
+                        public String getValue() {
+                            if ( path.getFileName() == null ) {
+                                return "";
+                            }
+                            return getBaseName( path.getFileName().toString() );
+                        }
+
+                        @Override
+                        public boolean isSearchable() {
+                            return true;
+                        }
+                    } );
+
                 }};
             }
         };

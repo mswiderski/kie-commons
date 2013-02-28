@@ -18,9 +18,14 @@ package org.kie.kieora.engine;
 
 import org.kie.kieora.model.KObject;
 import org.kie.kieora.model.KObjectKey;
-import org.kie.kieora.model.schema.MetaObject;
 
 public interface MetaIndexEngine {
+
+    public static final String FULL_TEXT_FIELD = "fullText";
+
+    boolean freshIndex();
+
+    void startBatchMode();
 
     void index( final KObject object );
 
@@ -32,6 +37,8 @@ public interface MetaIndexEngine {
     void delete( final KObjectKey objectKey );
 
     void delete( final KObjectKey... objectsKey );
+
+    void commit();
 
     void dispose();
 }

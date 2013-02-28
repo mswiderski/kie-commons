@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.regex.PatternSyntaxException;
 
 import org.kie.commons.java.nio.IOException;
+import org.kie.commons.java.nio.base.FileSystemId;
 import org.kie.commons.java.nio.base.GeneralPathImpl;
 import org.kie.commons.java.nio.file.FileSystem;
 import org.kie.commons.java.nio.file.InvalidPathException;
@@ -34,7 +35,8 @@ import org.kie.commons.java.nio.file.spi.FileSystemProvider;
 
 import static org.kie.commons.validation.Preconditions.*;
 
-public abstract class BaseSimpleFileSystem implements FileSystem {
+public abstract class BaseSimpleFileSystem implements FileSystem,
+                                                      FileSystemId {
 
     private final FileSystemProvider provider;
     private final String             defaultDirectory;
@@ -57,6 +59,11 @@ public abstract class BaseSimpleFileSystem implements FileSystem {
         this.supportedFileAttributeViews = Collections.unmodifiableSet( new HashSet<String>() {{
             add( "basic" );
         }} );
+    }
+
+    @Override
+    public String id() {
+        return "/";
     }
 
     private String validateDefaultDir( final String path ) throws IllegalArgumentException {

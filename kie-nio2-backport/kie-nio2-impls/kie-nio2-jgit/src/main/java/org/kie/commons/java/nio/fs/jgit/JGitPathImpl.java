@@ -24,12 +24,14 @@ import java.io.OutputStream;
 import org.eclipse.jgit.lib.ObjectId;
 import org.kie.commons.java.nio.IOException;
 import org.kie.commons.java.nio.base.AbstractPath;
+import org.kie.commons.java.nio.base.SegmentedPath;
 import org.kie.commons.java.nio.file.Path;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
 
 import static org.eclipse.jgit.lib.Constants.*;
 
-public class JGitPathImpl extends AbstractPath<JGitFileSystem> {
+public class JGitPathImpl extends AbstractPath<JGitFileSystem>
+        implements SegmentedPath {
 
     private static final int    BUFFER_SIZE      = 8192;
     public final static  String DEFAULT_REF_TREE = MASTER;
@@ -189,4 +191,8 @@ public class JGitPathImpl extends AbstractPath<JGitFileSystem> {
         return read;
     }
 
+    @Override
+    public String getSegmentId() {
+        return getRefTree();
+    }
 }

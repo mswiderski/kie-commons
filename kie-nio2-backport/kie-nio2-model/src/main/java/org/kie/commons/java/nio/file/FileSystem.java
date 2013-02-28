@@ -39,9 +39,10 @@ public interface FileSystem extends Closeable {
 
     Set<String> supportedFileAttributeViews();
 
-    Path getPath(String first, String... more) throws InvalidPathException;
+    Path getPath( String first,
+                  String... more ) throws InvalidPathException;
 
-    PathMatcher getPathMatcher(String syntaxAndPattern) throws IllegalArgumentException, PatternSyntaxException, UnsupportedOperationException;
+    PathMatcher getPathMatcher( String syntaxAndPattern ) throws IllegalArgumentException, PatternSyntaxException, UnsupportedOperationException;
 
     UserPrincipalLookupService getUserPrincipalLookupService() throws UnsupportedOperationException;
 

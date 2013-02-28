@@ -27,6 +27,7 @@ import org.eclipse.jgit.api.ListBranchCommand;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.kie.commons.java.nio.IOException;
+import org.kie.commons.java.nio.base.FileSystemId;
 import org.kie.commons.java.nio.file.FileStore;
 import org.kie.commons.java.nio.file.FileSystem;
 import org.kie.commons.java.nio.file.InvalidPathException;
@@ -41,7 +42,8 @@ import static org.eclipse.jgit.lib.Repository.*;
 import static org.kie.commons.java.nio.fs.jgit.util.JGitUtil.*;
 import static org.kie.commons.validation.Preconditions.*;
 
-public class JGitFileSystem implements FileSystem {
+public class JGitFileSystem implements FileSystem,
+                                       FileSystemId {
 
     private static final Set<String> SUPPORTED_ATTR_VIEWS = Collections.unmodifiableSet( new HashSet<String>() {{
         add( "basic" );
@@ -74,6 +76,11 @@ public class JGitFileSystem implements FileSystem {
         this.credential = checkNotNull( "credential", credential );
         this.listMode = listMode;
         this.fileStore = new JGitFileStore( gitRepo.getRepository() );
+    }
+
+    @Override
+    public String id() {
+        return name;
     }
 
     public String getName() {

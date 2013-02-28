@@ -18,6 +18,7 @@ package org.kie.kieora.backend.lucene;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.search.IndexSearcher;
 
 /**
  *
@@ -34,5 +35,13 @@ public interface LuceneSetup {
     void rename( final String source,
                  final String target );
 
+    IndexSearcher nrtSearcher();
+
+    void nrtRelease( final IndexSearcher searcher );
+
     void dispose();
+
+    boolean freshIndex();
+
+    void commit();
 }

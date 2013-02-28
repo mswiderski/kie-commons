@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 JBoss Inc
+ * Copyright 2013 JBoss Inc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,9 @@
  * limitations under the License.
  */
 
-package org.kie.kieora.model;
+package org.kie.commons.java.nio.base;
 
-public interface KObjectSimpleKey {
+public interface FileSystemId {
 
-    String getClusterId();
-
-    String getSegmentId();
-
-    String getKey();
-
+    String id();
 }

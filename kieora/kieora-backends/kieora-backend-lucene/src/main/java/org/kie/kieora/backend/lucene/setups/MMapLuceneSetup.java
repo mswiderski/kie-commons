@@ -19,6 +19,7 @@ package org.kie.kieora.backend.lucene.setups;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.MMapDirectory;
 
 /**
@@ -26,7 +27,16 @@ import org.apache.lucene.store.MMapDirectory;
  */
 public class MMapLuceneSetup extends DirectoryLuceneSetup {
 
-    public MMapLuceneSetup( final File file ) throws IOException {
-        super( new MMapDirectory( file ) );
+    public MMapLuceneSetup( final File file ) {
+        super( getDirectory( file ), freshIndex( file ) );
     }
+
+    private static Directory getDirectory( final File file ) {
+        try {
+            return new MMapDirectory( file );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
 }

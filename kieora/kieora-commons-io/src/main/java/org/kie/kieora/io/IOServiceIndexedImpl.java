@@ -16,9 +16,16 @@
 
 package org.kie.kieora.io;
 
+import java.io.BufferedWriter;
+import java.io.OutputStream;
+import java.net.URI;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
+import org.kie.commons.io.FileSystemType;
 import org.kie.commons.io.impl.IOServiceDotFileImpl;
 import org.kie.commons.java.nio.IOException;
 import org.kie.commons.java.nio.base.Properties;
@@ -27,10 +34,13 @@ import org.kie.commons.java.nio.file.AtomicMoveNotSupportedException;
 import org.kie.commons.java.nio.file.CopyOption;
 import org.kie.commons.java.nio.file.DirectoryNotEmptyException;
 import org.kie.commons.java.nio.file.FileAlreadyExistsException;
-import org.kie.commons.java.nio.file.Files;
+import org.kie.commons.java.nio.file.FileSystem;
+import org.kie.commons.java.nio.file.FileSystemAlreadyExistsException;
+import org.kie.commons.java.nio.file.FileSystemNotFoundException;
 import org.kie.commons.java.nio.file.NoSuchFileException;
 import org.kie.commons.java.nio.file.OpenOption;
 import org.kie.commons.java.nio.file.Path;
+import org.kie.commons.java.nio.file.ProviderNotFoundException;
 import org.kie.commons.java.nio.file.attribute.FileAttribute;
 import org.kie.commons.java.nio.file.attribute.FileAttributeView;
 import org.kie.kieora.engine.MetaIndexEngine;
@@ -41,14 +51,82 @@ import static org.kie.kieora.io.KObjectUtil.*;
 
 public class IOServiceIndexedImpl extends IOServiceDotFileImpl {
 
+    //    newOutputStream
     private final MetaIndexEngine indexEngine;
+    private final BatchIndex      batchIndex;
 
     private final Class<? extends FileAttributeView>[] views;
+    private final Set<FileSystem> indexedFSs = new HashSet<FileSystem>();
 
     public IOServiceIndexedImpl( final MetaIndexEngine indexEngine,
                                  Class<? extends FileAttributeView>... views ) {
         this.indexEngine = checkNotNull( "indexEngine", indexEngine );
+        this.batchIndex = new BatchIndex( indexEngine, this, views );
         this.views = views;
+    }
+
+    @Override
+    public FileSystem getFileSystem( final URI uri )
+            throws IllegalArgumentException, FileSystemNotFoundException,
+            ProviderNotFoundException, SecurityException {
+        try {
+            final FileSystem fs = super.getFileSystem( uri );
+            indexIfFresh( fs );
+            return fs;
+        } catch ( final IllegalArgumentException ex ) {
+            throw ex;
+        } catch ( final FileSystemNotFoundException ex ) {
+            throw ex;
+        } catch ( final ProviderNotFoundException ex ) {
+            throw ex;
+        } catch ( final SecurityException ex ) {
+            throw ex;
+        }
+    }
+
+    @Override
+    public FileSystem newFileSystem( final URI uri,
+                                     final Map<String, ?> env )
+            throws IllegalArgumentException, FileSystemAlreadyExistsException,
+            ProviderNotFoundException, IOException, SecurityException {
+        try {
+            final FileSystem fs = super.newFileSystem( uri, env );
+            index( fs );
+            return fs;
+        } catch ( final IllegalArgumentException ex ) {
+            throw ex;
+        } catch ( final FileSystemAlreadyExistsException ex ) {
+            throw ex;
+        } catch ( final ProviderNotFoundException ex ) {
+            throw ex;
+        } catch ( final IOException ex ) {
+            throw ex;
+        } catch ( final SecurityException ex ) {
+            throw ex;
+        }
+    }
+
+    @Override
+    public FileSystem newFileSystem( final URI uri,
+                                     final Map<String, ?> env,
+                                     final FileSystemType type )
+            throws IllegalArgumentException, FileSystemAlreadyExistsException,
+            ProviderNotFoundException, IOException, SecurityException {
+        try {
+            final FileSystem fs = super.newFileSystem( uri, env, type );
+            index( fs );
+            return fs;
+        } catch ( final IllegalArgumentException ex ) {
+            throw ex;
+        } catch ( final FileSystemAlreadyExistsException ex ) {
+            throw ex;
+        } catch ( final ProviderNotFoundException ex ) {
+            throw ex;
+        } catch ( final IOException ex ) {
+            throw ex;
+        } catch ( final SecurityException ex ) {
+            throw ex;
+        }
     }
 
     @Override
@@ -131,26 +209,6 @@ public class IOServiceIndexedImpl extends IOServiceDotFileImpl {
     }
 
     @Override
-    public synchronized Path createDirectories( final Path dir,
-                                                final FileAttribute<?>... attrs )
-            throws UnsupportedOperationException, FileAlreadyExistsException,
-            IOException, SecurityException {
-        final Path result = super.createDirectories( dir, attrs );
-
-        final Properties properties = new Properties();
-        if ( exists( dot( dir ) ) ) {
-            properties.load( newInputStream( dot( dir ) ) );
-        }
-        final FileAttribute<?>[] allAttrs = consolidate( properties, attrs );
-
-        if ( allAttrs.length > 0 ) {
-            indexEngine.index( toKObject( dir, allAttrs ) );
-        }
-
-        return result;
-    }
-
-    @Override
     public synchronized Path copy( final Path source,
                                    final Path target,
                                    final CopyOption... options )
@@ -181,32 +239,170 @@ public class IOServiceIndexedImpl extends IOServiceDotFileImpl {
         return result;
     }
 
-    protected synchronized Path internalCreateDirectory( final Path dir,
-                                                         final boolean skipAlreadyExistsException,
-                                                         final FileAttribute<?>... attrs )
-            throws IllegalArgumentException, UnsupportedOperationException, FileAlreadyExistsException,
-            IOException, SecurityException {
-        checkNotNull( "dir", dir );
+    private void indexIfFresh( final FileSystem fs ) {
+        if ( indexEngine.freshIndex() && !indexedFSs.contains( fs ) ) {
+            index( fs );
+        }
+    }
 
-        FileAttribute<?>[] allAttrs = attrs;
-        try {
-            Files.createDirectory( dir, attrs );
-        } catch ( final FileAlreadyExistsException ex ) {
-            final Properties properties = new Properties();
-            if ( exists( dot( dir ) ) ) {
-                properties.load( newInputStream( dot( dir ) ) );
-            }
-            allAttrs = consolidate( properties, attrs );
-            if ( !skipAlreadyExistsException ) {
-                throw ex;
-            }
+    private Path index( final Path path ) {
+        for ( final Class<? extends FileAttributeView> view : views ) {
+            getFileAttributeView( path, view );
         }
 
-        indexEngine.index( toKObject( dir, allAttrs ) );
+        final FileAttribute<?>[] allAttrs = convert( readAttributes( path ) );
 
-        buildDotFile( dir, newOutputStream( dot( dir ) ), allAttrs );
+        indexEngine.index( toKObject( path, allAttrs ) );
 
-        return dir;
+        return path;
+    }
+
+    public Path write( final Path path,
+                       final byte[] bytes,
+                       final OpenOption... options )
+            throws IOException, UnsupportedOperationException, SecurityException {
+        return index( super.write( path, bytes, options ) );
+    }
+
+    public Path write( final Path path,
+                       final byte[] bytes,
+                       final Map<String, ?> attrs,
+                       final OpenOption... options )
+            throws IOException, UnsupportedOperationException, SecurityException {
+        return index( super.write( path, bytes, attrs, options ) );
+    }
+
+    public Path write( final Path path,
+                       final byte[] bytes,
+                       final Set<? extends OpenOption> options,
+                       final FileAttribute<?>... attrs )
+            throws IllegalArgumentException, IOException, UnsupportedOperationException {
+        return index( super.write( path, bytes, options, attrs ) );
+    }
+
+    public Path write( final Path path,
+                       final Iterable<? extends CharSequence> lines,
+                       final Charset cs,
+                       final OpenOption... options )
+            throws IllegalArgumentException, IOException, UnsupportedOperationException, SecurityException {
+        return index( super.write( path, lines, cs, options ) );
+    }
+
+    public Path write( final Path path,
+                       final String content,
+                       final OpenOption... options )
+            throws IllegalArgumentException, IOException, UnsupportedOperationException {
+        return index( super.write( path, content, options ) );
+    }
+
+    public Path write( final Path path,
+                       final String content,
+                       final Charset cs,
+                       final OpenOption... options )
+            throws IllegalArgumentException, IOException, UnsupportedOperationException {
+        return index( super.write( path, content, cs, options ) );
+    }
+
+    public Path write( final Path path,
+                       final String content,
+                       final Set<? extends OpenOption> options,
+                       final FileAttribute<?>... attrs )
+            throws IllegalArgumentException, IOException, UnsupportedOperationException {
+        return index( super.write( path, content, options, attrs ) );
+    }
+
+    public Path write( final Path path,
+                       final String content,
+                       final Charset cs,
+                       final Set<? extends OpenOption> options,
+                       final FileAttribute<?>... attrs )
+            throws IllegalArgumentException, IOException, UnsupportedOperationException {
+        return index( super.write( path, content, cs, options, attrs ) );
+    }
+
+    public Path write( final Path path,
+                       final String content,
+                       final Map<String, ?> attrs,
+                       final OpenOption... options )
+            throws IllegalArgumentException, IOException, UnsupportedOperationException {
+        return index( super.write( path, content, attrs, options ) );
+    }
+
+    public Path write( final Path path,
+                       final String content,
+                       final Charset cs,
+                       final Map<String, ?> attrs,
+                       final OpenOption... options )
+            throws IllegalArgumentException, IOException, UnsupportedOperationException {
+        return index( super.write( path, content, cs, attrs, options ) );
+    }
+
+    public OutputStream newOutputStream( final Path path,
+                                         final OpenOption... options )
+            throws IllegalArgumentException, UnsupportedOperationException,
+            IOException, SecurityException {
+        final OutputStream out = super.newOutputStream( path, options );
+        return new OutputStream() {
+            @Override
+            public void write( final int b ) throws java.io.IOException {
+                out.write( b );
+            }
+
+            @Override
+            public void close() throws java.io.IOException {
+                out.close();
+                index( path );
+            }
+        };
+    }
+
+    public BufferedWriter newBufferedWriter( final Path path,
+                                             final Charset cs,
+                                             final OpenOption... options )
+            throws IllegalArgumentException, IOException, UnsupportedOperationException, SecurityException {
+        return new BufferedWriter( super.newBufferedWriter( path, cs, options ) ) {
+            @Override
+            public void close() throws java.io.IOException {
+                super.close();
+                index( path );
+            }
+        };
+    }
+
+    public Path createFile( final Path path,
+                            final FileAttribute<?>... attrs )
+            throws IllegalArgumentException, UnsupportedOperationException,
+            FileAlreadyExistsException, IOException, SecurityException {
+        return index( super.createFile( path, attrs ) );
+
+    }
+
+    public Path setAttributes( final Path path,
+                               final FileAttribute<?>... attrs )
+            throws UnsupportedOperationException, IllegalArgumentException,
+            ClassCastException, IOException, SecurityException {
+        return index( super.setAttributes( path, attrs ) );
+    }
+
+    public Path setAttributes( final Path path,
+                               final Map<String, Object> attrs )
+            throws UnsupportedOperationException, IllegalArgumentException,
+            ClassCastException, IOException, SecurityException {
+        return index( super.setAttributes( path, attrs ) );
+    }
+
+    public Path setAttribute( final Path path,
+                              final String attribute,
+                              final Object value )
+            throws UnsupportedOperationException, IllegalArgumentException,
+            ClassCastException, IOException, SecurityException {
+        return index( super.setAttribute( path, attribute, value ) );
+
+    }
+
+    private void index( final FileSystem fs ) {
+        indexedFSs.add( fs );
+        batchIndex.runAsync( fs );
     }
 
 }

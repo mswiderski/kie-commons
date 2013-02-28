@@ -44,6 +44,7 @@ public class LuceneIndexEngine implements MetaIndexEngine {
     private final LuceneSetup    lucene;
     private final FieldFactory   fieldFactory;
     private final MetaModelStore metaModelStore;
+    private       boolean        batchMode;
 
     public LuceneIndexEngine( final MetaModelStore metaModelStore,
                               final LuceneSetup lucene,
@@ -54,10 +55,22 @@ public class LuceneIndexEngine implements MetaIndexEngine {
     }
 
     @Override
+    public boolean freshIndex() {
+        return lucene.freshIndex();
+    }
+
+    @Override
+    public void startBatchMode() {
+        this.batchMode = true;
+    }
+
+    @Override
     public void index( final KObject object ) {
         updateMetaModel( object );
 
         lucene.indexDocument( object.getId(), newDocument( object ) );
+
+        commitIfNotBatchMode();
     }
 
     private Document newDocument( final KObject object ) {
@@ -66,13 +79,22 @@ public class LuceneIndexEngine implements MetaIndexEngine {
         doc.add( new StringField( "id", object.getId(), Field.Store.YES ) );
         doc.add( new StringField( "type", object.getType().getName(), Field.Store.YES ) );
         doc.add( new TextField( "key", object.getKey(), Field.Store.YES ) );
+        doc.add( new StringField( "cluster.id", object.getClusterId(), Field.Store.YES ) );
+        doc.add( new StringField( "segment.id", object.getSegmentId(), Field.Store.YES ) );
+
+        final StringBuilder allText = new StringBuilder( object.getKey() ).append( '\n' );
 
         for ( final KProperty<?> property : object.getProperties() ) {
             final IndexableField[] fields = fieldFactory.build( property );
             for ( final IndexableField field : fields ) {
                 doc.add( field );
+                if ( field instanceof TextField && !( property.getValue() instanceof Boolean ) ) {
+                    allText.append( field.stringValue() ).append( '\n' );
+                }
             }
         }
+
+        doc.add( new TextField( FULL_TEXT_FIELD, allText.toString().toLowerCase(), Field.Store.NO ) );
 
         return doc;
     }
@@ -88,6 +110,8 @@ public class LuceneIndexEngine implements MetaIndexEngine {
     public void rename( final KObjectKey from,
                         final KObjectKey to ) {
         lucene.rename( from.getId(), to.getId() );
+
+        commitIfNotBatchMode();
     }
 
     @Override
@@ -102,6 +126,18 @@ public class LuceneIndexEngine implements MetaIndexEngine {
             ids[ i ] = objectsKey[ i ].getId();
         }
         lucene.deleteIfExists( ids );
+    }
+
+    private void commitIfNotBatchMode() {
+        if ( !batchMode ) {
+            commit();
+        }
+    }
+
+    @Override
+    public void commit() {
+        this.batchMode = false;
+        lucene.commit();
     }
 
     @Override

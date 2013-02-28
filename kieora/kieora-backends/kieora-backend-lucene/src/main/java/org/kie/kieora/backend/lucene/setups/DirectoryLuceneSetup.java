@@ -16,6 +16,7 @@
 
 package org.kie.kieora.backend.lucene.setups;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -41,9 +42,12 @@ public class DirectoryLuceneSetup extends BaseLuceneSetup {
     private final IndexWriter writer;
     private final Analyzer    analyzer;
     private final Directory   directory;
+    private final boolean     freshIndex;
 
-    public DirectoryLuceneSetup( final Directory directory ) {
+    public DirectoryLuceneSetup( final Directory directory,
+                                 final boolean freshIndex ) {
         try {
+            this.freshIndex = freshIndex;
             this.directory = checkNotNull( "directory", directory );
             this.analyzer = new StandardAnalyzer( LUCENE_40 );
             final IndexWriterConfig config = new IndexWriterConfig( LUCENE_40, getAnalyzer() );
@@ -97,6 +101,7 @@ public class DirectoryLuceneSetup extends BaseLuceneSetup {
     @Override
     public void dispose() {
         try {
+            writer.commit();
             writer.close();
             analyzer.close();
             directory.close();
@@ -104,4 +109,23 @@ public class DirectoryLuceneSetup extends BaseLuceneSetup {
             throw new RuntimeException( e );
         }
     }
+
+    @Override
+    public boolean freshIndex() {
+        return freshIndex;
+    }
+
+    @Override
+    public void commit() {
+        try {
+            writer.commit();
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    protected static boolean freshIndex( final File file ) {
+        return !file.exists();
+    }
+
 }

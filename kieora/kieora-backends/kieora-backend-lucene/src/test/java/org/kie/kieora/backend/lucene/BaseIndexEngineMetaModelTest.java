@@ -58,6 +58,16 @@ public abstract class BaseIndexEngineMetaModelTest {
             }
 
             @Override
+            public String getClusterId() {
+                return "cluster.id.here";
+            }
+
+            @Override
+            public String getSegmentId() {
+                return "/";
+            }
+
+            @Override
             public String getKey() {
                 return "some.key.here";
             }
@@ -122,6 +132,16 @@ public abstract class BaseIndexEngineMetaModelTest {
                         return "Path";
                     }
                 };
+            }
+
+            @Override
+            public String getClusterId() {
+                return "cluster.id.here";
+            }
+
+            @Override
+            public String getSegmentId() {
+                return "/";
             }
 
             @Override
@@ -219,6 +239,16 @@ public abstract class BaseIndexEngineMetaModelTest {
                         return "PathX";
                     }
                 };
+            }
+
+            @Override
+            public String getClusterId() {
+                return "some.cluster.id.here";
+            }
+
+            @Override
+            public String getSegmentId() {
+                return "/";
             }
 
             @Override

@@ -51,6 +51,16 @@ public abstract class BaseIndexEngineSimpleTest {
             }
 
             @Override
+            public String getClusterId() {
+                return "cluster.id.here";
+            }
+
+            @Override
+            public String getSegmentId() {
+                return "/";
+            }
+
+            @Override
             public String getKey() {
                 return "some.key.here";
             }
@@ -82,7 +92,7 @@ public abstract class BaseIndexEngineSimpleTest {
 
                         @Override
                         public String getValue() {
-                            return "My comment here that has some content that is important to my users.";
+                            return "My comment file.txt here that has some content that is important to my users.";
                         }
 
                         @Override
@@ -219,6 +229,16 @@ public abstract class BaseIndexEngineSimpleTest {
                            }
 
                            @Override
+                           public String getClusterId() {
+                               return "cluster.id.here";
+                           }
+
+                           @Override
+                           public String getSegmentId() {
+                               return "/";
+                           }
+
+                           @Override
                            public String getKey() {
                                return "some.key.here";
                            }
@@ -236,6 +256,16 @@ public abstract class BaseIndexEngineSimpleTest {
                                        return "Path";
                                    }
                                };
+                           }
+
+                           @Override
+                           public String getClusterId() {
+                               return "other.cluster.id.here";
+                           }
+
+                           @Override
+                           public String getSegmentId() {
+                               return "/";
                            }
 
                            @Override
@@ -291,6 +321,16 @@ public abstract class BaseIndexEngineSimpleTest {
                         return "Path";
                     }
                 };
+            }
+
+            @Override
+            public String getClusterId() {
+                return "other.cluster.id.here";
+            }
+
+            @Override
+            public String getSegmentId() {
+                return "/";
             }
 
             @Override

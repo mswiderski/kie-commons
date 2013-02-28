@@ -19,6 +19,7 @@ package org.kie.kieora.backend.lucene.setups;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.NIOFSDirectory;
 
 /**
@@ -26,7 +27,16 @@ import org.apache.lucene.store.NIOFSDirectory;
  */
 public class NIOLuceneSetup extends DirectoryLuceneSetup {
 
-    public NIOLuceneSetup( final File file ) throws IOException {
-        super( new NIOFSDirectory( file ) );
+    public NIOLuceneSetup( final File file ) {
+        super( getDirectory( file ), freshIndex( file ) );
     }
+
+    private static Directory getDirectory( final File file ) {
+        try {
+            return new NIOFSDirectory( file );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
 }

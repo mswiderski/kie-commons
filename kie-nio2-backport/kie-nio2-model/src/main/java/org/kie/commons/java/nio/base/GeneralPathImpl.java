@@ -24,7 +24,9 @@ import org.kie.commons.java.nio.file.Path;
 
 import static org.kie.commons.validation.Preconditions.*;
 
-public class GeneralPathImpl extends AbstractPath<FileSystem> {
+public class GeneralPathImpl
+        extends AbstractPath<FileSystem>
+        implements SegmentedPath {
 
     private GeneralPathImpl( final FileSystem fs,
                              final File file ) {
@@ -148,5 +150,10 @@ public class GeneralPathImpl extends AbstractPath<FileSystem> {
             }
         }
         return file;
+    }
+
+    @Override
+    public String getSegmentId() {
+        return "/";
     }
 }

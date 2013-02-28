@@ -29,6 +29,7 @@ import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexableField;
 import org.kie.commons.java.nio.base.version.VersionHistory;
+import org.kie.commons.java.nio.file.attribute.FileTime;
 import org.kie.kieora.backend.lucene.FieldFactory;
 import org.kie.kieora.model.KProperty;
 
@@ -39,11 +40,25 @@ public class SimpleFieldFactory implements FieldFactory {
     @Override
     public IndexableField[] build( final KProperty<?> property ) {
 
+        if ( Enum.class.isAssignableFrom( property.getValue().getClass() ) ) {
+            if ( property.isSearchable() ) {
+                return new IndexableField[]{ new TextField( property.getName(), property.getValue().toString().toLowerCase(), Field.Store.YES ) };
+            }
+            return new IndexableField[]{ new StringField( property.getName(), property.getValue().toString().toLowerCase(), Field.Store.YES ) };
+        }
+
         if ( property.getValue().getClass() == String.class ) {
             if ( property.isSearchable() ) {
                 return new IndexableField[]{ new TextField( property.getName(), property.getValue().toString(), Field.Store.YES ) };
             }
             return new IndexableField[]{ new StringField( property.getName(), property.getValue().toString(), Field.Store.YES ) };
+        }
+
+        if ( property.getValue().getClass() == Boolean.class ) {
+            if ( property.isSearchable() ) {
+                return new IndexableField[]{ new TextField( property.getName(), ( (Boolean) property.getValue() ) ? "0" : "1", Field.Store.YES ) };
+            }
+            return new IndexableField[]{ new StringField( property.getName(), ( (Boolean) property.getValue() ) ? "0" : "1", Field.Store.YES ) };
         }
 
         if ( property.getValue().getClass() == Integer.class ) {
@@ -72,6 +87,13 @@ public class SimpleFieldFactory implements FieldFactory {
                 return new IndexableField[]{ new FloatField( property.getName(), (Float) property.getValue(), Field.Store.YES ) };
             }
             return new IndexableField[]{ new StoredField( property.getName(), (Float) property.getValue() ) };
+        }
+
+        if ( FileTime.class.isAssignableFrom( property.getValue().getClass() ) ) {
+            if ( property.isSearchable() ) {
+                return new IndexableField[]{ new LongField( property.getName(), ( (FileTime) property.getValue() ).toMillis(), Field.Store.YES ) };
+            }
+            return new IndexableField[]{ new StoredField( property.getName(), ( (FileTime) property.getValue() ).toMillis() ) };
         }
 
         if ( Date.class.isAssignableFrom( property.getValue().getClass() ) ) {
