@@ -27,6 +27,10 @@ import org.apache.lucene.store.MMapDirectory;
  */
 public class MMapLuceneSetup extends DirectoryLuceneSetup {
 
+    public MMapLuceneSetup() {
+        super( getDirectory( defaultFile() ), freshIndex( defaultFile() ) );
+    }
+
     public MMapLuceneSetup( final File file ) {
         super( getDirectory( file ), freshIndex( file ) );
     }

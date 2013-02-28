@@ -39,6 +39,8 @@ import static org.kie.commons.validation.Preconditions.*;
  */
 public class DirectoryLuceneSetup extends BaseLuceneSetup {
 
+    public static final String REPOSITORIES_ROOT_DIR = ".index";
+
     private final IndexWriter writer;
     private final Analyzer    analyzer;
     private final Directory   directory;
@@ -126,6 +128,15 @@ public class DirectoryLuceneSetup extends BaseLuceneSetup {
 
     protected static boolean freshIndex( final File file ) {
         return !file.exists();
+    }
+
+    protected static File defaultFile() {
+        final String value = System.getProperty( "org.kie.kieora.index.dir" );
+        if ( value == null || value.trim().isEmpty() ) {
+            return new File( REPOSITORIES_ROOT_DIR );
+        } else {
+            return new File( value.trim(), REPOSITORIES_ROOT_DIR );
+        }
     }
 
 }

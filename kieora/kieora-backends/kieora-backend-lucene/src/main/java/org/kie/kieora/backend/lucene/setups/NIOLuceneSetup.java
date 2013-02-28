@@ -27,6 +27,10 @@ import org.apache.lucene.store.NIOFSDirectory;
  */
 public class NIOLuceneSetup extends DirectoryLuceneSetup {
 
+    public NIOLuceneSetup() {
+        super( getDirectory( defaultFile() ), freshIndex( defaultFile() ) );
+    }
+
     public NIOLuceneSetup( final File file ) {
         super( getDirectory( file ), freshIndex( file ) );
     }
