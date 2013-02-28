@@ -838,7 +838,12 @@ public class JGitFileSystemProvider implements FileSystemProvider {
         checkNotNull( "source", source );
         checkNotNull( "target", target );
 
-        throw new AtomicMoveNotSupportedException( source.toString(), source.toString(), "atomic move not supported." );
+        try {
+            copy( source, target, options );
+            delete( source );
+        } catch ( final Exception ex ) {
+            throw new IOException( ex );
+        }
     }
 
     @Override
