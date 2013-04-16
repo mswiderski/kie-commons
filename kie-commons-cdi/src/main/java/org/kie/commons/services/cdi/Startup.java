@@ -10,4 +10,8 @@ import static java.lang.annotation.RetentionPolicy.*;
 @Target({ TYPE })
 public @interface Startup {
 
+    StartupType value() default StartupType.EAGER;
+
+    int priority() default 0;
+
 }
