@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+import org.junit.AfterClass;
 import org.junit.Test;
 import org.kie.commons.java.nio.file.FileSystem;
 import org.kie.commons.java.nio.file.OpenOption;
@@ -34,7 +35,7 @@ import static org.fest.assertions.api.Assertions.*;
 
 public class JGitFileSystemProviderUnsupportedOpTest {
 
-    private static final JGitFileSystemProvider PROVIDER = new JGitFileSystemProvider();
+    private static final JGitFileSystemProvider PROVIDER = JGitFileSystemProvider.getInstance();
     private static final Map<String, Object> EMPTY_ENV = Collections.emptyMap();
 
     @Test

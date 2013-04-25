@@ -27,6 +27,7 @@ import java.util.Map;
 import org.eclipse.jgit.util.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.kie.commons.java.nio.fs.jgit.JGitFileSystemProvider;
 
@@ -66,6 +67,7 @@ public class NewProviderDefineDirTest {
     }
 
     @Test
+    @Ignore
     public void testUsingProvidedPath() throws IOException {
 
         final File dir = createTempDirectory();
@@ -87,7 +89,6 @@ public class NewProviderDefineDirTest {
         assertThat(repos).isNotEmpty().contains("repo-name.git");
 
         System.setProperty("org.kie.nio.git.dir", "");
-
     }
 
 }

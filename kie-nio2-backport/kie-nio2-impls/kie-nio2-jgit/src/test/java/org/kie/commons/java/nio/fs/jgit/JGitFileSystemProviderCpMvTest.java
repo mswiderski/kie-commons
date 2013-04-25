@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 
+import org.junit.AfterClass;
 import org.junit.Test;
 import org.kie.commons.java.nio.file.DirectoryNotEmptyException;
 import org.kie.commons.java.nio.file.DirectoryStream;
@@ -31,7 +32,7 @@ import static org.fest.assertions.api.Assertions.*;
 
 public class JGitFileSystemProviderCpMvTest extends AbstractTestInfra {
 
-    private static final JGitFileSystemProvider PROVIDER = new JGitFileSystemProvider();
+    private static final JGitFileSystemProvider PROVIDER = JGitFileSystemProvider.getInstance();
 
     @Test
     public void testCopyBranches() throws IOException {

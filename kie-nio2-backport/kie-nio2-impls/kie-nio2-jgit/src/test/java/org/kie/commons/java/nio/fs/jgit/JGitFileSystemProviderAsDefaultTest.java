@@ -18,6 +18,7 @@ package org.kie.commons.java.nio.fs.jgit;
 
 import java.net.URI;
 
+import org.junit.AfterClass;
 import org.junit.Test;
 import org.kie.commons.java.nio.file.Path;
 
@@ -28,7 +29,7 @@ public class JGitFileSystemProviderAsDefaultTest extends AbstractTestInfra {
     private static final JGitFileSystemProvider PROVIDER;
 
     static {
-        PROVIDER = new JGitFileSystemProvider();
+        PROVIDER = JGitFileSystemProvider.getInstance();
         PROVIDER.forceAsDefault();
     }
 

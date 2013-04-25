@@ -28,6 +28,7 @@ import java.util.Scanner;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.ObjectId;
+import org.junit.AfterClass;
 import org.junit.Test;
 import org.kie.commons.data.Pair;
 import org.kie.commons.java.nio.base.NotImplementedException;
@@ -52,7 +53,7 @@ import static org.kie.commons.java.nio.fs.jgit.util.JGitUtil.*;
 
 public class JGitFileSystemProviderTest extends AbstractTestInfra {
 
-    private static final JGitFileSystemProvider PROVIDER = new JGitFileSystemProvider();
+    private static final JGitFileSystemProvider PROVIDER = JGitFileSystemProvider.getInstance();
 
     @Test
     public void testNewFileSystem() {
@@ -177,12 +178,12 @@ public class JGitFileSystemProviderTest extends AbstractTestInfra {
 
         assertThat( path ).isNotNull();
         assertThat( path.getRoot().toString() ).isEqualTo( "/" );
-        assertThat( path.getRoot().toUri().toString() ).isEqualTo( "git://master@new-get-repo-name/" );
+        assertThat( path.getRoot().toRealPath().toUri().toString() ).isEqualTo( "git://master@new-get-repo-name/" );
         assertThat( path.toString() ).isEqualTo( "/home" );
 
         final Path pathRelative = PROVIDER.getPath( URI.create( "git://master@new-get-repo-name/:home" ) );
         assertThat( pathRelative ).isNotNull();
-        assertThat( pathRelative.toUri().toString() ).isEqualTo( "git://master@new-get-repo-name/:home" );
+        assertThat( pathRelative.toRealPath().toUri().toString() ).isEqualTo( "git://master@new-get-repo-name/:home" );
         assertThat( pathRelative.getRoot().toString() ).isEqualTo( "" );
         assertThat( pathRelative.toString() ).isEqualTo( "home" );
     }

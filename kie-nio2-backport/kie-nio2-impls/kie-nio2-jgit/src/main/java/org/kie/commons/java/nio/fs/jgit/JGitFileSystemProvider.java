@@ -23,6 +23,7 @@ import java.io.FilterOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -44,10 +45,18 @@ import org.apache.commons.httpclient.util.URIUtil;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
+import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.jgit.transport.Daemon;
+import org.eclipse.jgit.transport.DaemonClient;
+import org.eclipse.jgit.transport.ServiceMayNotContinueException;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.eclipse.jgit.transport.resolver.RepositoryResolver;
+import org.eclipse.jgit.transport.resolver.ServiceNotAuthorizedException;
+import org.eclipse.jgit.transport.resolver.ServiceNotEnabledException;
 import org.kie.commons.data.Pair;
 import org.kie.commons.java.nio.IOException;
 import org.kie.commons.java.nio.base.BasicFileAttributesImpl;
@@ -95,19 +104,27 @@ import static org.kie.commons.validation.Preconditions.*;
 
 public class JGitFileSystemProvider implements FileSystemProvider {
 
-    public static final  String GIT_DEFAULT_REMOTE_NAME = DEFAULT_REMOTE_NAME;
-    private static final String SCHEME                  = "git";
+    public static final String GIT_DEFAULT_REMOTE_NAME = DEFAULT_REMOTE_NAME;
+    private static final String SCHEME = "git";
 
     public static final String REPOSITORIES_ROOT_DIR = ".niogit";
+    public static final boolean DEAMON_DEFAULT_ENABLED = true;
+    public static final int DEAMON_DEFAULT_PORT = 9418;
+    public static final boolean DEAMON_DEFAULT_UPLOAD = false;
+
     public static File FILE_REPOSITORIES_ROOT;
+    public static boolean DEAMON_ENABLED;
+    public static int DEAMON_PORT;
+    public static boolean DEAMON_UPLOAD;
 
     public static final String USER_NAME = "username";
-    public static final String PASSWORD  = "password";
-    public static final String INIT      = "init";
+    public static final String PASSWORD = "password";
+    public static final String INIT = "init";
 
-    public static final int SCHEME_SIZE         = ( SCHEME + "://" ).length();
+    public static final int SCHEME_SIZE = ( SCHEME + "://" ).length();
     public static final int DEFAULT_SCHEME_SIZE = ( "default://" ).length();
 
+    private final Daemon deamonService;
     private final Map<String, JGitFileSystem> fileSystems = new ConcurrentHashMap<String, JGitFileSystem>();
 
     private boolean isDefault;
@@ -119,10 +136,71 @@ public class JGitFileSystemProvider implements FileSystemProvider {
 
     public static void loadConfig() {
         final String value = System.getProperty( "org.kie.nio.git.dir" );
+        final String enabled = System.getProperty( "org.kie.nio.git.deamon.enabled" );
+        final String port = System.getProperty( "org.kie.nio.git.deamon.port" );
+        final String upload = System.getProperty( "org.kie.nio.git.deamon.upload" );
         if ( value == null || value.trim().isEmpty() ) {
             FILE_REPOSITORIES_ROOT = new File( REPOSITORIES_ROOT_DIR );
         } else {
             FILE_REPOSITORIES_ROOT = new File( value.trim(), REPOSITORIES_ROOT_DIR );
+        }
+
+        if ( enabled == null || enabled.trim().isEmpty() ) {
+            DEAMON_ENABLED = DEAMON_DEFAULT_ENABLED;
+        } else {
+            try {
+                DEAMON_ENABLED = Boolean.valueOf( enabled );
+            } catch ( Exception ex ) {
+                DEAMON_ENABLED = DEAMON_DEFAULT_ENABLED;
+            }
+        }
+        if ( DEAMON_ENABLED ) {
+            if ( port == null || port.trim().isEmpty() ) {
+                DEAMON_PORT = DEAMON_DEFAULT_PORT;
+            } else {
+                DEAMON_PORT = Integer.valueOf( port );
+            }
+            if ( upload == null || upload.trim().isEmpty() ) {
+                DEAMON_UPLOAD = DEAMON_DEFAULT_UPLOAD;
+            } else {
+                try {
+                    DEAMON_UPLOAD = Boolean.valueOf( upload );
+                } catch ( Exception ex ) {
+                    DEAMON_UPLOAD = DEAMON_DEFAULT_UPLOAD;
+                }
+            }
+
+        }
+    }
+
+    // for lazy init - basically for tests
+    private static class DefaultProviderHolder {
+
+        static final JGitFileSystemProvider provider = new JGitFileSystemProvider();
+
+        private static JGitFileSystemProvider getDefaultProvider() {
+            return provider;
+        }
+    }
+
+    public static JGitFileSystemProvider getInstance() {
+        return DefaultProviderHolder.getDefaultProvider();
+    }
+
+    private final class RepositoryResolverImpl
+            implements RepositoryResolver<DaemonClient> {
+
+        @Override
+        public Repository open( final DaemonClient client,
+                                final String name )
+                throws RepositoryNotFoundException,
+                ServiceNotAuthorizedException, ServiceNotEnabledException,
+                ServiceMayNotContinueException {
+            final JGitFileSystem fs = fileSystems.get( name );
+            if ( fs == null ) {
+                throw new RepositoryNotFoundException( name );
+            }
+            return fs.gitRepo().getRepository();
         }
     }
 
@@ -134,7 +212,6 @@ public class JGitFileSystemProvider implements FileSystemProvider {
                 return name.endsWith( DOT_GIT_EXT );
             }
         } );
-
         if ( repos != null ) {
             for ( final String repo : repos ) {
                 final File repoDir = new File( FILE_REPOSITORIES_ROOT, repo );
@@ -144,6 +221,18 @@ public class JGitFileSystemProvider implements FileSystemProvider {
                     fileSystems.put( name, fs );
                 }
             }
+        }
+        if ( DEAMON_ENABLED ) {
+            deamonService = new Daemon( new InetSocketAddress( DEAMON_PORT ) );
+            deamonService.getService( "git-receive-pack" ).setEnabled( DEAMON_UPLOAD );
+            deamonService.setRepositoryResolver( new RepositoryResolverImpl() );
+            try {
+                deamonService.start();
+            } catch ( java.io.IOException e ) {
+                throw new IOException( e );
+            }
+        } else {
+            deamonService = null;
         }
     }
 
