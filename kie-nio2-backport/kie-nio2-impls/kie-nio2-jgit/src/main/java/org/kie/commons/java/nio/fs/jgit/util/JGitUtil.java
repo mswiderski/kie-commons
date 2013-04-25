@@ -33,16 +33,19 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
+import org.eclipse.jgit.api.CreateBranchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand;
 import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.api.MergeResult;
+import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.ConcurrentRefUpdateException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.api.errors.NoHeadException;
+import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.dircache.DirCacheBuilder;
 import org.eclipse.jgit.dircache.DirCacheCheckout;
@@ -55,11 +58,13 @@ import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectInserter;
 import org.eclipse.jgit.lib.ObjectLoader;
+import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.RefUpdate;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryCache;
+import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.merge.MergeMessageFormatter;
 import org.eclipse.jgit.merge.MergeStrategy;
 import org.eclipse.jgit.merge.Merger;
@@ -71,6 +76,7 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.RevWalkUtils;
 import org.eclipse.jgit.storage.file.FileRepository;
 import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.FileTreeIterator;
@@ -101,11 +107,12 @@ public final class JGitUtil {
     private JGitUtil() {
     }
 
-    public static Git newRepository( final File repoFolder ) throws IOException {
+    public static Git newRepository( final File repoFolder,
+                                     final boolean bare ) throws IOException {
         checkNotNull( "repoFolder", repoFolder );
 
         try {
-            return Git.init().setBare( true ).setDirectory( repoFolder ).call();
+            return Git.init().setBare( bare ).setDirectory( repoFolder ).call();
         } catch ( GitAPIException e ) {
             throw new IOException( e );
         }
@@ -190,6 +197,7 @@ public final class JGitUtil {
 
     public static Git cloneRepository( final File repoFolder,
                                        final String fromURI,
+                                       final boolean bare,
                                        final CredentialsProvider credentialsProvider ) {
 
         if ( !repoFolder.getName().endsWith( DOT_GIT_EXT ) ) {
@@ -205,7 +213,7 @@ public final class JGitUtil {
                 git = new Git( repository );
             } else {
                 git = Git.cloneRepository()
-                        .setBare( true )
+                        .setBare( bare )
                         .setCloneAllBranches( true )
                         .setURI( fromURI )
                         .setDirectory( repoFolder )
@@ -250,6 +258,50 @@ public final class JGitUtil {
         }
     }
 
+    public static void syncRepository( final Git git,
+                                       final CredentialsProvider credentialsProvider,
+                                       final String origin,
+                                       boolean force )
+            throws InvalidRemoteException {
+
+        if ( origin == null || origin.isEmpty() ) {
+            fetchRepository( git, credentialsProvider );
+        } else {
+            try {
+                final StoredConfig config = git.getRepository().getConfig();
+                config.setString( "remote", "upstream", "url", origin );
+                config.save();
+            } catch ( final Exception ex ) {
+                throw new RuntimeException( ex );
+            }
+
+            final List<RefSpec> specs = new ArrayList<RefSpec>();
+            specs.add( new RefSpec( "+refs/heads/*:refs/remotes/upstream/*" ) );
+            specs.add( new RefSpec( "+refs/tags/*:refs/tags/*" ) );
+            specs.add( new RefSpec( "+refs/notes/*:refs/notes/*" ) );
+
+            try {
+                git.fetch()
+                        .setCredentialsProvider( credentialsProvider )
+                        .setRefSpecs( specs )
+                        .setRemote( origin )
+                        .call();
+
+                git.branchCreate()
+                        .setName( "master" )
+                        .setUpstreamMode( CreateBranchCommand.SetupUpstreamMode.SET_UPSTREAM )
+                        .setStartPoint( "upstream/master" )
+                        .setForce( true )
+                        .call();
+
+            } catch ( final InvalidRemoteException e ) {
+                throw e;
+            } catch ( final Exception ex ) {
+                throw new RuntimeException( ex );
+            }
+        }
+    }
+
     public static void delete( final Git git,
                                final String branchName,
                                final String path,
@@ -261,6 +313,30 @@ public final class JGitUtil {
         commit( git, branchName, name, email, message, timeZone, when, new HashMap<String, File>() {{
             put( path, null );
         }} );
+    }
+
+    public static ObjectId getTreeRefObjectId( final Repository repo,
+                                               final String treeRef ) {
+        try {
+            return repo.resolve( treeRef + "^{tree}" );
+        } catch ( java.io.IOException ex ) {
+            throw new RuntimeException( ex );
+        }
+    }
+
+    public static List<DiffEntry> getDiff( final Repository repo,
+                                           final ObjectId oldRef,
+                                           final ObjectId newRef ) {
+        try {
+            ObjectReader reader = repo.newObjectReader();
+            CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
+            oldTreeIter.reset( reader, oldRef );
+            CanonicalTreeParser newTreeIter = new CanonicalTreeParser();
+            newTreeIter.reset( reader, newRef );
+            return new Git( repo ).diff().setNewTree( newTreeIter ).setOldTree( oldTreeIter ).setShowNameAndStatusOnly( true ).call();
+        } catch ( Exception ex ) {
+            throw new RuntimeException( ex );
+        }
     }
 
     public static void commit( final Git git,
@@ -946,8 +1022,8 @@ public final class JGitUtil {
     public static class JGitPathInfo {
 
         private final ObjectId objectId;
-        private final String   path;
-        private final long     size;
+        private final String path;
+        private final long size;
         private final PathType pathType;
 
         public JGitPathInfo( final ObjectId objectId,

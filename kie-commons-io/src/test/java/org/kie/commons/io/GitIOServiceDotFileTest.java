@@ -18,16 +18,20 @@ package org.kie.commons.io;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.kie.commons.java.nio.file.FileSystem;
 import org.kie.commons.java.nio.file.Path;
 import org.kie.commons.java.nio.file.attribute.FileAttribute;
 
 import static org.junit.Assert.*;
+import static org.kie.commons.io.FileSystemType.Bootstrap.BOOTSTRAP_INSTANCE;
 
 /**
  *
@@ -82,6 +86,38 @@ public class GitIOServiceDotFileTest extends CommonIOExceptionsServiceDotFileTes
     @Override
     protected int testNewByteChannelAttrSize() {
         return 10;
+    }
+
+    @Test
+    public void testGetFileSystems() {
+
+        final URI newRepo = URI.create( "git://" + new Date().getTime() + "-repo-test" );
+        ioService().newFileSystem( newRepo, new HashMap<String, Object>() );
+
+        final URI newRepo2 = URI.create( "git://" + new Date().getTime() + "-repo2-test" );
+        ioService().newFileSystem( newRepo2, new HashMap<String, Object>() );
+
+        final URI newRepo3 = URI.create( "git://" + new Date().getTime() + "-repo3-test" );
+        ioService().newFileSystem( newRepo3, new HashMap<String, Object>(), BOOTSTRAP_INSTANCE );
+
+        final Iterator<FileSystem> iterator = ioService.getFileSystems().iterator();
+
+        assertNotNull( iterator );
+
+        assertTrue( iterator.hasNext() );
+        assertNotNull( iterator.next() );
+
+        assertTrue( iterator.hasNext() );
+        assertNotNull( iterator.next() );
+
+        assertTrue( iterator.hasNext() );
+        assertNotNull( iterator.next() );
+
+        assertTrue( iterator.hasNext() );
+        assertNotNull( iterator.next() );
+
+        assertFalse( iterator.hasNext() );
+
     }
 
     @Test

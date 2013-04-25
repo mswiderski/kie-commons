@@ -39,9 +39,9 @@ public abstract class BaseSimpleFileSystem implements FileSystem,
                                                       FileSystemId {
 
     private final FileSystemProvider provider;
-    private final String             defaultDirectory;
-    private final Set<String>        supportedFileAttributeViews;
-    private final File[]             roots;
+    private final String defaultDirectory;
+    private final Set<String> supportedFileAttributeViews;
+    private final File[] roots;
 
     BaseSimpleFileSystem( final FileSystemProvider provider,
                           final String path ) {
@@ -156,5 +156,10 @@ public abstract class BaseSimpleFileSystem implements FileSystem,
 
     File[] listRoots() {
         return roots;
+    }
+
+    @Override
+    public String toString() {
+        return "file://" + id();
     }
 }

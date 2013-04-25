@@ -52,6 +52,14 @@ public class IOServiceNio2WrapperImpl
     }
 
     @Override
+    public void startBatch() {
+    }
+
+    @Override
+    public void endBatch() {
+    }
+
+    @Override
     public SeekableByteChannel newByteChannel( final Path path,
                                                final Set<? extends OpenOption> options,
                                                final FileAttribute<?>... attrs )

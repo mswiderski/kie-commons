@@ -53,7 +53,7 @@ import static org.junit.Assert.*;
 public class BatchIndexTest {
 
     private static IOService ioService = null;
-    private static MetaModelStore  metaModelStore;
+    private static MetaModelStore metaModelStore;
     private static BaseLuceneSetup luceneSetup;
     private static MetaIndexEngine indexEngine;
 
@@ -82,7 +82,7 @@ public class BatchIndexTest {
     }
 
     @Test
-    public void testIndex() throws IOException {
+    public void testIndex() throws IOException, InterruptedException {
         {
             final Path file = ioService().get( "git://temp-repo-test/path/to/file.txt" );
             ioService().write( file, "some content here", Collections.<OpenOption>emptySet(), new FileAttribute<Object>() {
@@ -183,7 +183,7 @@ public class BatchIndexTest {
 
                                    @Override
                                    public Object value() {
-                                       return "release document updated, should be checked by boss.";
+                                       return "unlock document updated, should be checked by boss.";
                                    }
                                }
                              );

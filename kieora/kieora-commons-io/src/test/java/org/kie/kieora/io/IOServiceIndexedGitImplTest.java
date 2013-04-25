@@ -21,6 +21,7 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 
@@ -37,6 +38,7 @@ import org.kie.commons.io.CommonIOExceptionsServiceDotFileTest;
 import org.kie.commons.io.IOService;
 import org.kie.commons.io.attribute.DublinCoreView;
 import org.kie.commons.java.nio.base.version.VersionAttributeView;
+import org.kie.commons.java.nio.file.FileSystem;
 import org.kie.commons.java.nio.file.OpenOption;
 import org.kie.commons.java.nio.file.Path;
 import org.kie.commons.java.nio.file.attribute.FileAttribute;
@@ -48,6 +50,7 @@ import org.kie.kieora.backend.lucene.setups.RAMLuceneSetup;
 import org.kie.kieora.engine.MetaModelStore;
 
 import static org.junit.Assert.*;
+import static org.kie.commons.io.FileSystemType.Bootstrap.BOOTSTRAP_INSTANCE;
 
 /**
  *
@@ -56,7 +59,7 @@ import static org.junit.Assert.*;
 public class IOServiceIndexedGitImplTest extends CommonIOExceptionsServiceDotFileTest {
 
     protected IOService ioService = null;
-    private MetaModelStore  metaModelStore;
+    private MetaModelStore metaModelStore;
     private BaseLuceneSetup luceneSetup;
 
     public IOService ioService() {
@@ -284,6 +287,38 @@ public class IOServiceIndexedGitImplTest extends CommonIOExceptionsServiceDotFil
 
     private Path getRootPath() {
         return ioService().get( URI.create( "git://indexed-repo-test/" ) );
+    }
+
+    @Test
+    public void testGetFileSystems() {
+
+        final URI newRepo = URI.create( "git://" + new Date().getTime() + "-repo-test" );
+        ioService().newFileSystem( newRepo, new HashMap<String, Object>() );
+
+        final URI newRepo2 = URI.create( "git://" + new Date().getTime() + "-repo2-test" );
+        ioService().newFileSystem( newRepo2, new HashMap<String, Object>() );
+
+        final URI newRepo3 = URI.create( "git://" + new Date().getTime() + "-repo3-test" );
+        ioService().newFileSystem( newRepo3, new HashMap<String, Object>(), BOOTSTRAP_INSTANCE );
+
+        final Iterator<FileSystem> iterator = ioService.getFileSystems().iterator();
+
+        assertNotNull( iterator );
+
+        assertTrue( iterator.hasNext() );
+        assertNotNull( iterator.next() );
+
+        assertTrue( iterator.hasNext() );
+        assertNotNull( iterator.next() );
+
+        assertTrue( iterator.hasNext() );
+        assertNotNull( iterator.next() );
+
+        assertTrue( iterator.hasNext() );
+        assertNotNull( iterator.next() );
+
+        assertFalse( iterator.hasNext() );
+
     }
 
     @Test

@@ -72,6 +72,14 @@ public class IOServiceDotFileImpl
     }
 
     @Override
+    public void startBatch() {
+    }
+
+    @Override
+    public void endBatch() {
+    }
+
+    @Override
     public synchronized SeekableByteChannel newByteChannel( final Path path,
                                                             final Set<? extends OpenOption> options,
                                                             final FileAttribute<?>... attrs )

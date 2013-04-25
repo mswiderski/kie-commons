@@ -19,8 +19,12 @@ package org.kie.commons.java.nio.fs.jgit;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand;
@@ -28,13 +32,8 @@ import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.kie.commons.java.nio.IOException;
 import org.kie.commons.java.nio.base.FileSystemId;
-import org.kie.commons.java.nio.file.FileStore;
-import org.kie.commons.java.nio.file.FileSystem;
-import org.kie.commons.java.nio.file.InvalidPathException;
-import org.kie.commons.java.nio.file.Path;
-import org.kie.commons.java.nio.file.PathMatcher;
-import org.kie.commons.java.nio.file.PatternSyntaxException;
-import org.kie.commons.java.nio.file.WatchService;
+import org.kie.commons.java.nio.file.*;
+import org.kie.commons.java.nio.file.InterruptedException;
 import org.kie.commons.java.nio.file.attribute.UserPrincipalLookupService;
 import org.kie.commons.java.nio.file.spi.FileSystemProvider;
 
@@ -50,22 +49,26 @@ public class JGitFileSystem implements FileSystem,
         add( "version" );
     }} );
 
-    private final FileSystemProvider         provider;
-    private final Git                        gitRepo;
+    private final FileSystemProvider provider;
+    private final Git gitRepo;
     private final ListBranchCommand.ListMode listMode;
+    private final String fullHostName;
     private boolean isClose = false;
-    private final FileStore           fileStore;
-    private final String              name;
+    private final FileStore fileStore;
+    private final String name;
     private final CredentialsProvider credential;
+    private final Queue<WatchKey> events = new ConcurrentLinkedQueue<WatchKey>();
 
     JGitFileSystem( final FileSystemProvider provider,
+                    final String fullHostName,
                     final Git git,
                     final String name,
                     final CredentialsProvider credential ) {
-        this( provider, git, name, null, credential );
+        this( provider, fullHostName, git, name, null, credential );
     }
 
     JGitFileSystem( final FileSystemProvider provider,
+                    final String fullHostName,
                     final Git git,
                     final String name,
                     final ListBranchCommand.ListMode listMode,
@@ -76,6 +79,7 @@ public class JGitFileSystem implements FileSystem,
         this.credential = checkNotNull( "credential", credential );
         this.listMode = listMode;
         this.fileStore = new JGitFileStore( gitRepo.getRepository() );
+        this.fullHostName = fullHostName;
     }
 
     @Override
@@ -236,7 +240,39 @@ public class JGitFileSystem implements FileSystem,
     public WatchService newWatchService()
             throws UnsupportedOperationException, IOException {
         checkClose();
-        throw new UnsupportedOperationException();
+        return new WatchService() {
+            private boolean isClose = false;
+
+            @Override
+            public WatchKey poll() throws ClosedWatchServiceException {
+                return events.poll();
+            }
+
+            @Override
+            public WatchKey poll( long timeout,
+                                  TimeUnit unit ) throws ClosedWatchServiceException, org.kie.commons.java.nio.file.InterruptedException {
+                return events.poll();
+            }
+
+            @Override
+            public WatchKey take() throws ClosedWatchServiceException, InterruptedException {
+                while ( !isClose ) {
+                    if ( events.size() > 0 ) {
+                        return events.poll();
+                    }
+                    try {
+                        Thread.sleep( 10 );
+                    } catch ( java.lang.InterruptedException e ) {
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            public void close() throws IOException {
+                isClose = true;
+            }
+        };
     }
 
     @Override
@@ -286,6 +322,14 @@ public class JGitFileSystem implements FileSystem,
     }
 
     @Override
+    public String toString() {
+        if ( fullHostName == null ) {
+            return "git://" + id();
+        }
+        return "git://" + fullHostName + "/" + id();
+    }
+
+    @Override
     public int hashCode() {
         int result = provider.hashCode();
         result = 31 * result + gitRepo.hashCode();
@@ -294,5 +338,35 @@ public class JGitFileSystem implements FileSystem,
         result = 31 * result + ( fileStore != null ? fileStore.hashCode() : 0 );
         result = 31 * result + name.hashCode();
         return result;
+    }
+
+    public void publishEvents( final Path watchable,
+                               final List<WatchEvent<?>> events ) {
+        this.events.add( new WatchKey() {
+
+            @Override
+            public boolean isValid() {
+                return true;
+            }
+
+            @Override
+            public List<WatchEvent<?>> pollEvents() {
+                return events;
+            }
+
+            @Override
+            public boolean reset() {
+                return false;
+            }
+
+            @Override
+            public void cancel() {
+            }
+
+            @Override
+            public Watchable watchable() {
+                return watchable;
+            }
+        } );
     }
 }

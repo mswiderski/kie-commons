@@ -53,6 +53,10 @@ public interface IOService {
 
     public static Set<OpenOption> EMPTY_OPTIONS = new HashSet<OpenOption>();
 
+    void startBatch();
+
+    void endBatch();
+
     FileAttribute<?>[] convert( Map<String, ?> attrs );
 
     Path get( final String first,
@@ -80,6 +84,8 @@ public interface IOService {
                               final FileSystemType type )
             throws IllegalArgumentException, FileSystemAlreadyExistsException,
             ProviderNotFoundException, IOException, SecurityException;
+
+    void onNewFileSystem( final NewFileSystemListener listener );
 
     InputStream newInputStream( final Path path,
                                 final OpenOption... options )
@@ -325,4 +331,12 @@ public interface IOService {
                 final OpenOption... options )
             throws IllegalArgumentException, IOException, UnsupportedOperationException;
 
+    public abstract static class NewFileSystemListener {
+
+        public abstract void execute( final FileSystem newFileSystem,
+                                      final String scheme,
+                                      final String name,
+                                      final Map<String, ?> env );
+
+    }
 }

@@ -20,13 +20,14 @@ import org.kie.commons.java.nio.IOException;
 
 public interface Watchable {
 
-    WatchKey register(WatchService watcher,
-            WatchEvent.Kind<?>[] events,
-            WatchEvent.Modifier... modifiers)
+    WatchKey register( final WatchService watcher,
+                       final WatchEvent.Kind<?>[] events,
+                       final WatchEvent.Modifier... modifiers )
             throws UnsupportedOperationException, IllegalArgumentException, ClosedWatchServiceException,
             IOException, SecurityException;
 
-    WatchKey register(WatchService watcher, WatchEvent.Kind<?>... events)
+    WatchKey register( final WatchService watcher,
+                       final WatchEvent.Kind<?>... events )
             throws UnsupportedOperationException, IllegalArgumentException, ClosedWatchServiceException,
             IOException, SecurityException;
 }

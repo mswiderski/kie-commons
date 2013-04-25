@@ -18,10 +18,13 @@ package org.kie.commons.io;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +38,7 @@ import org.kie.commons.java.nio.base.AttrHolder;
 import org.kie.commons.java.nio.base.NeedsPreloadedAttrs;
 import org.kie.commons.java.nio.channels.SeekableByteChannel;
 import org.kie.commons.java.nio.file.FileAlreadyExistsException;
+import org.kie.commons.java.nio.file.FileSystem;
 import org.kie.commons.java.nio.file.OpenOption;
 import org.kie.commons.java.nio.file.Path;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributeView;
@@ -43,6 +47,7 @@ import org.kie.commons.java.nio.file.attribute.FileAttribute;
 import org.kie.commons.java.nio.file.attribute.FileTime;
 
 import static org.junit.Assert.*;
+import static org.kie.commons.io.FileSystemType.Bootstrap.BOOTSTRAP_INSTANCE;
 import static org.kie.commons.java.nio.base.dotfiles.DotFileUtils.*;
 
 /**
@@ -607,7 +612,7 @@ public abstract class CommonIOServiceDotFileTest {
     public static class DublinCoreAttributes implements BasicFileAttributes {
 
         private final BasicFileAttributes attributes;
-        private final String              author;
+        private final String author;
 
         private DublinCoreAttributes( final BasicFileAttributes attributes,
                                       final String author ) {

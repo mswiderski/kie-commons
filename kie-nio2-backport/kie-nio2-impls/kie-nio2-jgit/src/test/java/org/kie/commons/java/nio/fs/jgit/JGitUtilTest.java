@@ -38,7 +38,7 @@ public class JGitUtilTest extends AbstractTestInfra {
         final File parentFolder = createTempDirectory();
         final File gitFolder = new File( parentFolder, "mytest.git" );
 
-        final Git git = JGitUtil.newRepository( gitFolder );
+        final Git git = JGitUtil.newRepository( gitFolder, true );
 
         assertThat( git ).isNotNull();
 
@@ -56,7 +56,7 @@ public class JGitUtilTest extends AbstractTestInfra {
         final File parentFolder = createTempDirectory();
         final File gitFolder = new File( parentFolder, "mytest.git" );
 
-        final Git origin = JGitUtil.newRepository( gitFolder );
+        final Git origin = JGitUtil.newRepository( gitFolder, true );
 
         commit( origin, "user_branch", "name", "name@example.com", "commit!", null, null, new HashMap<String, File>() {{
             put( "file2.txt", tempFile( "temp2222" ) );
@@ -70,7 +70,7 @@ public class JGitUtilTest extends AbstractTestInfra {
 
         final File gitClonedFolder = new File( parentFolder, "myclone.git" );
 
-        final Git git = cloneRepository( gitClonedFolder, origin.getRepository().getDirectory().toString(), CredentialsProvider.getDefault() );
+        final Git git = cloneRepository( gitClonedFolder, origin.getRepository().getDirectory().toString(), true, CredentialsProvider.getDefault() );
 
         assertThat( git ).isNotNull();
 
@@ -87,7 +87,7 @@ public class JGitUtilTest extends AbstractTestInfra {
         final File parentFolder = createTempDirectory();
         final File gitFolder = new File( parentFolder, "mytest.git" );
 
-        final Git origin = JGitUtil.newRepository( gitFolder );
+        final Git origin = JGitUtil.newRepository( gitFolder, true );
 
         commit( origin, "user_branch", "name", "name@example.com", "commit!", null, null, new HashMap<String, File>() {{
             put( "path/to/file2.txt", tempFile( "temp2222" ) );
@@ -98,7 +98,7 @@ public class JGitUtilTest extends AbstractTestInfra {
 
         final File gitClonedFolder = new File( parentFolder, "myclone.git" );
 
-        final Git git = cloneRepository( gitClonedFolder, origin.getRepository().getDirectory().toString(), CredentialsProvider.getDefault() );
+        final Git git = cloneRepository( gitClonedFolder, origin.getRepository().getDirectory().toString(), true, CredentialsProvider.getDefault() );
 
         assertThat( JGitUtil.checkPath( git, "user_branch", "pathx/" ).getK1() ).isEqualTo( NOT_FOUND );
         assertThat( JGitUtil.checkPath( git, "user_branch", "path/to/file2.txt" ).getK1() ).isEqualTo( FILE );

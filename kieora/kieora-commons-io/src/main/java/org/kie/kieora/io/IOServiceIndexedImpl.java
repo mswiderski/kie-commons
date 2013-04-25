@@ -22,12 +22,15 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.kie.commons.data.Pair;
 import org.kie.commons.io.FileSystemType;
 import org.kie.commons.io.impl.IOServiceDotFileImpl;
 import org.kie.commons.java.nio.IOException;
+import org.kie.commons.java.nio.base.FileSystemId;
 import org.kie.commons.java.nio.base.Properties;
 import org.kie.commons.java.nio.channels.SeekableByteChannel;
 import org.kie.commons.java.nio.file.AtomicMoveNotSupportedException;
@@ -41,6 +44,9 @@ import org.kie.commons.java.nio.file.NoSuchFileException;
 import org.kie.commons.java.nio.file.OpenOption;
 import org.kie.commons.java.nio.file.Path;
 import org.kie.commons.java.nio.file.ProviderNotFoundException;
+import org.kie.commons.java.nio.file.StandardWatchEventKind;
+import org.kie.commons.java.nio.file.WatchEvent;
+import org.kie.commons.java.nio.file.WatchService;
 import org.kie.commons.java.nio.file.attribute.FileAttribute;
 import org.kie.commons.java.nio.file.attribute.FileAttributeView;
 import org.kie.kieora.engine.MetaIndexEngine;
@@ -51,12 +57,12 @@ import static org.kie.kieora.io.KObjectUtil.*;
 
 public class IOServiceIndexedImpl extends IOServiceDotFileImpl {
 
-    //    newOutputStream
     private final MetaIndexEngine indexEngine;
-    private final BatchIndex      batchIndex;
+    private final BatchIndex batchIndex;
 
     private final Class<? extends FileAttributeView>[] views;
     private final Set<FileSystem> indexedFSs = new HashSet<FileSystem>();
+    private final ThreadGroup threadGroup = new ThreadGroup( "IOServiceIndexing" );
 
     public IOServiceIndexedImpl( final MetaIndexEngine indexEngine,
                                  Class<? extends FileAttributeView>... views ) {
@@ -92,6 +98,7 @@ public class IOServiceIndexedImpl extends IOServiceDotFileImpl {
         try {
             final FileSystem fs = super.newFileSystem( uri, env );
             index( fs );
+            setupWatchService( fs );
             return fs;
         } catch ( final IllegalArgumentException ex ) {
             throw ex;
@@ -115,6 +122,7 @@ public class IOServiceIndexedImpl extends IOServiceDotFileImpl {
         try {
             final FileSystem fs = super.newFileSystem( uri, env, type );
             index( fs );
+            setupWatchService( fs );
             return fs;
         } catch ( final IllegalArgumentException ex ) {
             throw ex;
@@ -127,6 +135,43 @@ public class IOServiceIndexedImpl extends IOServiceDotFileImpl {
         } catch ( final SecurityException ex ) {
             throw ex;
         }
+    }
+
+    private void setupWatchService( final FileSystem fs ) {
+        final WatchService ws = fs.newWatchService();
+        new Thread( threadGroup, "IOService(WatchService[" + ( (FileSystemId) fs ).id() + "])" ) {
+            @Override
+            public void run() {
+                while ( true ) {
+                    final List<WatchEvent<?>> events = ws.take().pollEvents();
+                    for ( WatchEvent object : events ) {
+                        if ( object.kind() == StandardWatchEventKind.ENTRY_MODIFY
+                                || object.kind() == StandardWatchEventKind.ENTRY_CREATE ) {
+
+                            final Path path = (Path) object.context();
+
+                            if ( !path.getFileName().toString().startsWith( "." ) ) {
+
+                                for ( final Class<? extends FileAttributeView> view : views ) {
+                                    getFileAttributeView( path, view );
+                                }
+
+                                final FileAttribute<?>[] allAttrs = convert( readAttributes( path ) );
+                                indexEngine.index( toKObject( path, allAttrs ) );
+                            }
+                        }
+                        if ( object.kind() == StandardWatchEventKind.ENTRY_RENAME ) {
+                            Pair<Path, Path> pair = (Pair<Path, Path>) object.context();
+                            indexEngine.rename( toKObjectKey( pair.getK1() ), toKObjectKey( pair.getK2() ) );
+                        }
+                        if ( object.kind() == StandardWatchEventKind.ENTRY_DELETE ) {
+                            final Path path = (Path) object.context();
+                            indexEngine.delete( toKObjectKey( path ) );
+                        }
+                    }
+                }
+            }
+        }.start();
     }
 
     @Override

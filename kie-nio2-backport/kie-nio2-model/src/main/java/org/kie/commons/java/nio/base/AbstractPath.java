@@ -43,21 +43,22 @@ import static org.kie.commons.data.Pair.*;
 import static org.kie.commons.java.nio.file.WatchEvent.*;
 import static org.kie.commons.validation.Preconditions.*;
 
-public abstract class AbstractPath<FS extends FileSystem> implements Path,
-                                                                     AttrHolder {
+public abstract class AbstractPath<FS extends FileSystem>
+        implements Path,
+                   AttrHolder {
 
-    public static final Pattern WINDOWS_DRIVER         = Pattern.compile( "^/?[A-Z|a-z]+(:).*" );
-    public static final String  DEFAULT_WINDOWS_DRIVER = "C:";
+    public static final Pattern WINDOWS_DRIVER = Pattern.compile( "^/?[A-Z|a-z]+(:).*" );
+    public static final String DEFAULT_WINDOWS_DRIVER = "C:";
 
-    protected final FS      fs;
+    protected final FS fs;
     protected final boolean usesWindowsFormat;
 
     protected final boolean isAbsolute;
-    protected final byte[]  path;
+    protected final byte[] path;
     protected final boolean isRoot;
     protected final boolean isRealPath;
     protected final boolean isNormalized;
-    protected final String  host;
+    protected final String host;
 
     protected String toStringFormat;
     protected File file = null;
@@ -559,7 +560,7 @@ public abstract class AbstractPath<FS extends FileSystem> implements Path,
                               Modifier... modifiers )
             throws UnsupportedOperationException, IllegalArgumentException,
             ClosedWatchServiceException, IOException, SecurityException {
-        throw new UnsupportedOperationException();
+        return watcher.poll();
     }
 
     @Override
@@ -567,7 +568,7 @@ public abstract class AbstractPath<FS extends FileSystem> implements Path,
                               Kind<?>... events )
             throws UnsupportedOperationException, IllegalArgumentException,
             ClosedWatchServiceException, IOException, SecurityException {
-        throw new UnsupportedOperationException();
+        return watcher.poll();
     }
 
     @Override
@@ -692,10 +693,10 @@ public abstract class AbstractPath<FS extends FileSystem> implements Path,
 
     public static class RootInfo {
 
-        private final int     startOffset;
+        private final int startOffset;
         private final boolean isAbsolute;
         private final boolean isRoot;
-        private final byte[]  path;
+        private final byte[] path;
 
         public RootInfo( int startOffset,
                          boolean isAbsolute,

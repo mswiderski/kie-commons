@@ -63,8 +63,8 @@ public abstract class AbstractIOService implements IOService {
 
     private static final Set<StandardOpenOption> CREATE_NEW_FILE_OPTIONS = EnumSet.of( CREATE_NEW, WRITE );
 
-    protected static final Charset        UTF_8           = Charset.forName( "UTF-8" );
-    public static final    FileSystemType DEFAULT_FS_TYPE = new FileSystemType() {
+    protected static final Charset UTF_8 = Charset.forName( "UTF-8" );
+    public static final FileSystemType DEFAULT_FS_TYPE = new FileSystemType() {
         public String toString() {
             return "DEFAULT";
         }
@@ -75,6 +75,7 @@ public abstract class AbstractIOService implements IOService {
     };
 
     protected final Map<FileSystemType, List<FileSystem>> fileSystems = new HashMap<FileSystemType, List<FileSystem>>();
+    protected NewFileSystemListener newFileSystemListener = null;
 
     @Override
     public Path get( final String first,
@@ -100,6 +101,15 @@ public abstract class AbstractIOService implements IOService {
                     @Override
                     public boolean hasNext() {
                         if ( currentIter == null ) {
+                            if ( fsIterator.hasNext() ) {
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        }
+
+                        if ( !currentIter.hasNext() ) {
+                            currentIter = null;
                             return fsIterator.hasNext();
                         }
                         return true;
@@ -158,6 +168,11 @@ public abstract class AbstractIOService implements IOService {
             registerFS( fs, type );
             throw ex;
         }
+    }
+
+    @Override
+    public void onNewFileSystem( final NewFileSystemListener listener ) {
+        this.newFileSystemListener = listener;
     }
 
     private void registerFS( final FileSystem fs,

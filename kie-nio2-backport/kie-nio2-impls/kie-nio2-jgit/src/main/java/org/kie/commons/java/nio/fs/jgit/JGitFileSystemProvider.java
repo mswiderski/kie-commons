@@ -28,6 +28,7 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -44,7 +45,7 @@ import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.util.URIUtil;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand;
-import org.eclipse.jgit.api.errors.InvalidRemoteException;
+import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
@@ -52,11 +53,17 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.Daemon;
 import org.eclipse.jgit.transport.DaemonClient;
+import org.eclipse.jgit.transport.PostReceiveHook;
+import org.eclipse.jgit.transport.PreReceiveHook;
+import org.eclipse.jgit.transport.ReceiveCommand;
+import org.eclipse.jgit.transport.ReceivePack;
 import org.eclipse.jgit.transport.ServiceMayNotContinueException;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.eclipse.jgit.transport.resolver.ReceivePackFactory;
 import org.eclipse.jgit.transport.resolver.RepositoryResolver;
 import org.eclipse.jgit.transport.resolver.ServiceNotAuthorizedException;
 import org.eclipse.jgit.transport.resolver.ServiceNotEnabledException;
+import org.kie.commons.cluster.ClusterService;
 import org.kie.commons.data.Pair;
 import org.kie.commons.java.nio.IOException;
 import org.kie.commons.java.nio.base.BasicFileAttributesImpl;
@@ -87,12 +94,15 @@ import org.kie.commons.java.nio.file.OpenOption;
 import org.kie.commons.java.nio.file.Path;
 import org.kie.commons.java.nio.file.StandardCopyOption;
 import org.kie.commons.java.nio.file.StandardOpenOption;
+import org.kie.commons.java.nio.file.StandardWatchEventKind;
+import org.kie.commons.java.nio.file.WatchEvent;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributeView;
 import org.kie.commons.java.nio.file.attribute.BasicFileAttributes;
 import org.kie.commons.java.nio.file.attribute.FileAttribute;
 import org.kie.commons.java.nio.file.attribute.FileAttributeView;
 import org.kie.commons.java.nio.file.spi.FileSystemProvider;
 import org.kie.commons.java.nio.fs.jgit.util.JGitUtil;
+import org.kie.commons.message.MessageType;
 
 import static org.eclipse.jgit.api.ListBranchCommand.ListMode.*;
 import static org.eclipse.jgit.lib.Constants.*;
@@ -110,12 +120,15 @@ public class JGitFileSystemProvider implements FileSystemProvider {
     public static final String REPOSITORIES_ROOT_DIR = ".niogit";
     public static final boolean DEAMON_DEFAULT_ENABLED = true;
     public static final int DEAMON_DEFAULT_PORT = 9418;
-    public static final boolean DEAMON_DEFAULT_UPLOAD = false;
+    public static final String DEAMON_DEFAULT_HOST = "localhost";
+    public static final boolean DEAMON_DEFAULT_UPLOAD = true;
+    private static final String GIT_ENV_PROP_DEST_PATH = "out-dir";
 
     public static File FILE_REPOSITORIES_ROOT;
     public static boolean DEAMON_ENABLED;
     public static int DEAMON_PORT;
     public static boolean DEAMON_UPLOAD;
+    private static String DEAMON_HOST;
 
     public static final String USER_NAME = "username";
     public static final String PASSWORD = "password";
@@ -126,6 +139,11 @@ public class JGitFileSystemProvider implements FileSystemProvider {
 
     private final Daemon deamonService;
     private final Map<String, JGitFileSystem> fileSystems = new ConcurrentHashMap<String, JGitFileSystem>();
+    private final Map<Repository, JGitFileSystem> repoIndex = new ConcurrentHashMap<Repository, JGitFileSystem>();
+
+    private final String fullHostName;
+
+    private final Map<Repository, ClusterService> clusterMap = new ConcurrentHashMap<Repository, ClusterService>();
 
     private boolean isDefault;
 
@@ -137,6 +155,7 @@ public class JGitFileSystemProvider implements FileSystemProvider {
     public static void loadConfig() {
         final String value = System.getProperty( "org.kie.nio.git.dir" );
         final String enabled = System.getProperty( "org.kie.nio.git.deamon.enabled" );
+        final String host = System.getProperty( "org.kie.nio.git.deamon.host" );
         final String port = System.getProperty( "org.kie.nio.git.deamon.port" );
         final String upload = System.getProperty( "org.kie.nio.git.deamon.upload" );
         if ( value == null || value.trim().isEmpty() ) {
@@ -160,6 +179,11 @@ public class JGitFileSystemProvider implements FileSystemProvider {
             } else {
                 DEAMON_PORT = Integer.valueOf( port );
             }
+            if ( host == null || host.trim().isEmpty() ) {
+                DEAMON_HOST = DEAMON_DEFAULT_HOST;
+            } else {
+                DEAMON_HOST = host;
+            }
             if ( upload == null || upload.trim().isEmpty() ) {
                 DEAMON_UPLOAD = DEAMON_DEFAULT_UPLOAD;
             } else {
@@ -169,7 +193,6 @@ public class JGitFileSystemProvider implements FileSystemProvider {
                     DEAMON_UPLOAD = DEAMON_DEFAULT_UPLOAD;
                 }
             }
-
         }
     }
 
@@ -205,6 +228,8 @@ public class JGitFileSystemProvider implements FileSystemProvider {
     }
 
     public JGitFileSystemProvider() {
+        fullHostName = DEAMON_ENABLED ? DEAMON_HOST + ":" + DEAMON_PORT : null;
+
         final String[] repos = FILE_REPOSITORIES_ROOT.list( new FilenameFilter() {
             @Override
             public boolean accept( final File dir,
@@ -217,15 +242,72 @@ public class JGitFileSystemProvider implements FileSystemProvider {
                 final File repoDir = new File( FILE_REPOSITORIES_ROOT, repo );
                 if ( repoDir.isDirectory() ) {
                     final String name = repoDir.getName().substring( 0, repoDir.getName().indexOf( DOT_GIT_EXT ) );
-                    final JGitFileSystem fs = new JGitFileSystem( this, newRepository( repoDir ), name, ALL, buildCredential( null ) );
+                    final JGitFileSystem fs = new JGitFileSystem( this, fullHostName, newRepository( repoDir, true ), name, ALL, buildCredential( null ) );
                     fileSystems.put( name, fs );
+                    repoIndex.put( fs.gitRepo().getRepository(), fs );
                 }
             }
         }
         if ( DEAMON_ENABLED ) {
-            deamonService = new Daemon( new InetSocketAddress( DEAMON_PORT ) );
+
+            deamonService = new Daemon( new InetSocketAddress( DEAMON_HOST, DEAMON_PORT ) );
             deamonService.getService( "git-receive-pack" ).setEnabled( DEAMON_UPLOAD );
             deamonService.setRepositoryResolver( new RepositoryResolverImpl() );
+            deamonService.setReceivePackFactory( new ReceivePackFactory<DaemonClient>() {
+                @Override
+                public ReceivePack create( final DaemonClient req,
+                                           final Repository db ) throws ServiceNotEnabledException, ServiceNotAuthorizedException {
+
+                    return new ReceivePack( db ) {{
+                        final ClusterService clusterService = clusterMap.get( db );
+                        final JGitFileSystem fs = repoIndex.get( db );
+                        final String treeRef = "master";
+                        final ObjectId oldHead = JGitUtil.getTreeRefObjectId( db, treeRef );
+
+                        setPreReceiveHook( new PreReceiveHook() {
+                            @Override
+                            public void onPreReceive( final ReceivePack rp,
+                                                      final Collection<ReceiveCommand> commands ) {
+                                if ( clusterService != null ) {
+                                    clusterService.lock();
+                                }
+                            }
+                        } );
+
+                        setPostReceiveHook( new PostReceiveHook() {
+                            @Override
+                            public void onPostReceive( final ReceivePack rp,
+                                                       final Collection<ReceiveCommand> commands ) {
+                                final ObjectId newHead = JGitUtil.getTreeRefObjectId( db, treeRef );
+                                notifyDiffs( fs, treeRef, oldHead, newHead );
+
+                                if ( clusterService != null ) {
+                                    clusterService.broadcast( new MessageType() {
+
+                                                                  @Override
+                                                                  public String toString() {
+                                                                      return "SYNC_FS";
+                                                                  }
+
+                                                                  @Override
+                                                                  public int hashCode() {
+                                                                      return "SYNC_FS".hashCode();
+                                                                  }
+                                                              },
+                                                              new HashMap<String, String>() {{
+                                                                  put( "fs_scheme", "git" );
+                                                                  put( "fs_id", fs.id() );
+                                                                  put( "fs_uri", fs.toString() );
+                                                              }}
+                                                            );
+
+                                    clusterService.unlock();
+                                }
+                            }
+                        } );
+                    }};
+                }
+            } );
             try {
                 deamonService.start();
             } catch ( java.io.IOException e ) {
@@ -233,6 +315,77 @@ public class JGitFileSystemProvider implements FileSystemProvider {
             }
         } else {
             deamonService = null;
+        }
+    }
+
+    private synchronized void notifyDiffs( final JGitFileSystem fs,
+                                           final String tree,
+                                           final ObjectId oldHead,
+                                           final ObjectId newHead ) {
+
+        final String host = tree + "@" + fs.getName();
+        final Path root = JGitPathImpl.createRoot( fs, "/", host, false );
+
+        final List<DiffEntry> diff = JGitUtil.getDiff( fs.gitRepo().getRepository(), oldHead, newHead );
+        final List<WatchEvent<?>> events = new ArrayList<WatchEvent<?>>( diff.size() );
+
+        for ( final DiffEntry diffEntry : diff ) {
+            final Path oldPath;
+            if ( !diffEntry.getOldPath().equals( DiffEntry.DEV_NULL ) ) {
+                oldPath = JGitPathImpl.create( fs, "/" + diffEntry.getOldPath(), host, null, false );
+            } else {
+                oldPath = null;
+            }
+
+            final Path newPath;
+            if ( !diffEntry.getNewPath().equals( DiffEntry.DEV_NULL ) ) {
+                JGitPathInfo pathInfo = resolvePath( fs.gitRepo(), tree, diffEntry.getNewPath() );
+                newPath = JGitPathImpl.create( fs, "/" + pathInfo.getPath(), host, pathInfo.getObjectId(), false );
+            } else {
+                newPath = null;
+            }
+
+            events.add( new WatchEvent() {
+                @Override
+                public Kind kind() {
+                    switch ( diffEntry.getChangeType() ) {
+                        case ADD:
+                        case COPY:
+                            return StandardWatchEventKind.ENTRY_CREATE;
+                        case DELETE:
+                            return StandardWatchEventKind.ENTRY_DELETE;
+                        case MODIFY:
+                            return StandardWatchEventKind.ENTRY_MODIFY;
+                        case RENAME:
+                            return StandardWatchEventKind.ENTRY_RENAME;
+                        default:
+                            throw new RuntimeException();
+                    }
+                }
+
+                @Override
+                public int count() {
+                    return 1;
+                }
+
+                @Override
+                public Object context() {
+                    switch ( diffEntry.getChangeType() ) {
+                        case ADD:
+                        case COPY:
+                            return newPath;
+                        case DELETE:
+                            return oldPath;
+                        case MODIFY:
+                            return oldPath;
+                        case RENAME:
+                            return new Pair<Path, Path>( oldPath, newPath );
+                        default:
+                            throw new RuntimeException();
+                    }
+                }
+            } );
+            fs.publishEvents( root, events );
         }
     }
 
@@ -274,36 +427,61 @@ public class JGitFileSystemProvider implements FileSystemProvider {
         }
 
         final Git git;
-        final File repoDest = new File( FILE_REPOSITORIES_ROOT, name + DOT_GIT_EXT );
         final ListBranchCommand.ListMode listMode;
         final CredentialsProvider credential;
+
+        boolean bare = true;
+        final String outPath = (String) env.get( GIT_ENV_PROP_DEST_PATH );
+
+        final File repoDest;
+        if ( outPath != null ) {
+            repoDest = new File( outPath );
+        } else {
+            repoDest = new File( FILE_REPOSITORIES_ROOT, name + DOT_GIT_EXT );
+        }
+
         if ( env.containsKey( GIT_DEFAULT_REMOTE_NAME ) ) {
             final String originURI = env.get( GIT_DEFAULT_REMOTE_NAME ).toString();
             credential = buildCredential( env );
-            git = cloneRepository( repoDest, originURI, credential );
+            git = cloneRepository( repoDest, originURI, bare, credential );
             listMode = ALL;
         } else {
             credential = buildCredential( null );
-            git = newRepository( repoDest );
+            git = newRepository( repoDest, bare );
             listMode = null;
         }
 
-        final JGitFileSystem fs = new JGitFileSystem( this, git, name, listMode, credential );
+        final JGitFileSystem fs = new JGitFileSystem( this, fullHostName, git, name, listMode, credential );
         fileSystems.put( name, fs );
+        repoIndex.put( fs.gitRepo().getRepository(), fs );
 
-        if ( !env.containsKey( GIT_DEFAULT_REMOTE_NAME ) && env.containsKey( INIT ) && env.get( INIT ).equals( Boolean.TRUE ) ) {
+        boolean init = false;
+
+        if ( env.containsKey( INIT ) && Boolean.valueOf( env.get( INIT ).toString() ) ) {
+            init = true;
+        }
+
+        if ( !env.containsKey( GIT_DEFAULT_REMOTE_NAME ) && init ) {
             try {
                 final URI initURI = URI.create( getScheme() + "://master@" + name + "/readme.md" );
                 final CommentedOption op = setupOp( env );
                 final OutputStream stream = newOutputStream( getPath( initURI ), op );
-                final String init = "Repository Init Content\n" +
+                final String _init = "Repository Init Content\n" +
                         "=======================\n" +
                         "\n" +
                         "Your project description here.";
-                stream.write( init.getBytes() );
+                stream.write( _init.getBytes() );
                 stream.close();
             } catch ( final Exception e ) {
             }
+            if ( !bare ) {
+                //todo: checkout
+            }
+        }
+
+        final Object _clusterService = env.get( "clusterService" );
+        if ( _clusterService != null && _clusterService instanceof ClusterService ) {
+            clusterMap.put( git.getRepository(), (ClusterService) _clusterService );
         }
 
         return fs;
@@ -326,10 +504,16 @@ public class JGitFileSystemProvider implements FileSystemProvider {
             throw new FileSystemNotFoundException( "No filesystem for uri (" + uri + ") found." );
         }
 
-        if ( hasFetchFlag( uri ) ) {
+        if ( hasSyncFlag( uri ) ) {
             try {
-                JGitUtil.fetchRepository( fileSystem.gitRepo(), fileSystem.getCredential() );
-            } catch ( final InvalidRemoteException invalid ) {
+                final String treeRef = "master";
+                final ObjectId oldHead = JGitUtil.getTreeRefObjectId( fileSystem.gitRepo().getRepository(), treeRef );
+                final Map<String, String> params = getQueryParams( uri );
+                syncRepository( fileSystem.gitRepo(), fileSystem.getCredential(), params.get( "sync" ), hasForceFlag( uri ) );
+                final ObjectId newHead = JGitUtil.getTreeRefObjectId( fileSystem.gitRepo().getRepository(), treeRef );
+                notifyDiffs( fileSystem, treeRef, oldHead, newHead );
+            } catch ( final Exception ex ) {
+                throw new IOException( ex );
             }
         }
 
@@ -1138,14 +1322,43 @@ public class JGitFileSystemProvider implements FileSystemProvider {
         return host;
     }
 
-    private boolean hasFetchFlag( final URI uri ) {
+    private boolean hasSyncFlag( final URI uri ) {
         checkNotNull( "uri", uri );
 
         if ( uri.getQuery() != null ) {
-            return uri.getQuery().contains( "fetch" );
+            return uri.getQuery().contains( "sync" );
         }
 
         return false;
+    }
+
+    private boolean hasForceFlag( URI uri ) {
+        checkNotNull( "uri", uri );
+
+        if ( uri.getQuery() != null ) {
+            return uri.getQuery().contains( "force" );
+        }
+
+        return false;
+    }
+
+    //by spec, it should be a list of pairs, but here we're just uisng a map.
+    private static Map<String, String> getQueryParams( final URI uri ) {
+        final String[] params = uri.getQuery().split( "&" );
+        return new HashMap<String, String>( params.length ) {{
+            for ( String param : params ) {
+                final String[] kv = param.split( "=" );
+                final String name = kv[ 0 ];
+                final String value;
+                if ( kv.length == 2 ) {
+                    value = kv[ 1 ];
+                } else {
+                    value = "";
+                }
+
+                put( name, value );
+            }
+        }};
     }
 
     private String extractPath( final URI uri ) {
