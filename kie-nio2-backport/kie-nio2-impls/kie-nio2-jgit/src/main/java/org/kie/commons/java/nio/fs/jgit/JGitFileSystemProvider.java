@@ -153,15 +153,15 @@ public class JGitFileSystemProvider implements FileSystemProvider {
     }
 
     public static void loadConfig() {
-        final String value = System.getProperty( "org.kie.nio.git.dir" );
+        final String bareReposDir = System.getProperty( "org.kie.nio.git.dir" );
         final String enabled = System.getProperty( "org.kie.nio.git.deamon.enabled" );
         final String host = System.getProperty( "org.kie.nio.git.deamon.host" );
         final String port = System.getProperty( "org.kie.nio.git.deamon.port" );
         final String upload = System.getProperty( "org.kie.nio.git.deamon.upload" );
-        if ( value == null || value.trim().isEmpty() ) {
+        if ( bareReposDir == null || bareReposDir.trim().isEmpty() ) {
             FILE_REPOSITORIES_ROOT = new File( REPOSITORIES_ROOT_DIR );
         } else {
-            FILE_REPOSITORIES_ROOT = new File( value.trim(), REPOSITORIES_ROOT_DIR );
+            FILE_REPOSITORIES_ROOT = new File( bareReposDir.trim(), REPOSITORIES_ROOT_DIR );
         }
 
         if ( enabled == null || enabled.trim().isEmpty() ) {
