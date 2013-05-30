@@ -29,6 +29,7 @@ import org.kie.kieora.model.KObjectKey;
 import org.kie.kieora.model.KProperty;
 import org.kie.kieora.model.schema.MetaType;
 
+import static org.apache.commons.codec.binary.Base64.*;
 import static org.apache.commons.io.FilenameUtils.*;
 
 /**
@@ -199,12 +200,9 @@ public final class KObjectUtil {
     }
 
     private static String sha1( final String input ) {
-        byte[] result = DIGEST.digest( input.getBytes() );
-        final StringBuffer sb = new StringBuffer();
-        for ( int i = 0; i < result.length; i++ ) {
-            sb.append( Integer.toString( ( result[ i ] & 0xff ) + 0x100, 16 ).substring( 1 ) );
+        if ( input == null || input.trim().length() == 0 ) {
+            return "--";
         }
-
-        return sb.toString();
+        return encodeBase64String( DIGEST.digest( input.getBytes() ) );
     }
 }

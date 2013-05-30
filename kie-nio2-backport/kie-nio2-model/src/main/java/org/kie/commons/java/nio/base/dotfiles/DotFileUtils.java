@@ -1,6 +1,7 @@
 package org.kie.commons.java.nio.base.dotfiles;
 
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,7 +27,9 @@ public final class DotFileUtils {
             final Properties properties = new Properties();
 
             for ( final FileAttribute<?> attr : attrs ) {
-                properties.put( attr.name(), attr.value() );
+                if ( attr.value() instanceof Serializable ) {
+                    properties.put( attr.name(), attr.value() );
+                }
             }
 
             try {
@@ -59,11 +62,7 @@ public final class DotFileUtils {
         final Map<String, Object> temp = new HashMap<String, Object>( props );
 
         for ( final FileAttribute<?> attr : attrs ) {
-            if ( attr.value() == null ) {
-                temp.remove( attr.name() );
-            } else {
-                temp.put( attr.name(), attr.value() );
-            }
+            temp.put( attr.name(), attr.value() );
         }
 
         final FileAttribute<?>[] result = new FileAttribute<?>[ temp.size() ];
