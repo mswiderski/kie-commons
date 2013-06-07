@@ -52,12 +52,18 @@
           <instructions>
             <Bundle-SymbolicName>org.kie.commons.data</Bundle-SymbolicName>
             <Import-Package>
+              !org.kie.commons.cluster,
               !org.kie.commons.data,
+              !org.kie.commons.lock,
+              !org.kie.commons.message,
               *
             </Import-Package>
             <Private-Package></Private-Package>
             <Export-Package>
-              org.kie.commons.data
+              org.kie.commons.cluster,
+              org.kie.commons.data,
+              org.kie.commons.lock,
+              org.kie.commons.message
             </Export-Package>
           </instructions>
         </configuration>
