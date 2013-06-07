@@ -25,7 +25,7 @@
   </parent>
 
   <artifactId>kie-commons-regex</artifactId>
-  <packaging>jar</packaging>
+  <packaging>bundle</packaging>
 
   <name>Kie Commons Regular Expression</name>
   <description>
@@ -51,6 +51,26 @@
         <directory>src/main/resources</directory>
       </resource>
     </resources>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <configuration>
+          <instructions>
+            <Bundle-SymbolicName>org.kie.commons.regex.util</Bundle-SymbolicName>
+            <Import-Package>
+              !org.kie.commons.regex.util,
+              *
+            </Import-Package>
+            <Private-Package></Private-Package>
+            <Export-Package>
+              org.kie.commons.regex.util
+            </Export-Package>
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+
   </build>
 
 </project>

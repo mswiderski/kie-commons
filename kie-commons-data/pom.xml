@@ -25,7 +25,7 @@
   </parent>
 
   <artifactId>kie-commons-data</artifactId>
-  <packaging>jar</packaging>
+  <packaging>bundle</packaging>
 
   <name>Kie Commons Data</name>
   <description>
@@ -43,6 +43,28 @@
         <directory>src/main/resources</directory>
       </resource>
     </resources>
+
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <configuration>
+          <instructions>
+            <Bundle-SymbolicName>org.kie.commons.data</Bundle-SymbolicName>
+            <Import-Package>
+              !org.kie.commons.data,
+              *
+            </Import-Package>
+            <Private-Package></Private-Package>
+            <Export-Package>
+              org.kie.commons.data
+            </Export-Package>
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+
+
   </build>
 
 </project>

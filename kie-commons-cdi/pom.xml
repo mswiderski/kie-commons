@@ -10,7 +10,7 @@
   </parent>
 
   <artifactId>kie-commons-cdi</artifactId>
-  <packaging>jar</packaging>
+  <packaging>bundle</packaging>
 
   <name>Kie Commons CDI</name>
   <description>Collection of reusable CDI extensions for KIE.</description>
@@ -24,5 +24,27 @@
     </dependency>
 
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <configuration>
+          <instructions>
+            <Bundle-SymbolicName>org.kie.commons.services.cdi</Bundle-SymbolicName>
+            <Import-Package>
+              !org.kie.commons.services.cdi,
+              *
+            </Import-Package>
+            <Private-Package></Private-Package>
+            <Export-Package>
+              org.kie.commons.services.cdi
+            </Export-Package>
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>
