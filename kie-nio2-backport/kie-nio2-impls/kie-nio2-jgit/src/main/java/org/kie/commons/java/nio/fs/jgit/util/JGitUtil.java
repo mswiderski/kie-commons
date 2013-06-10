@@ -582,6 +582,11 @@ public final class JGitUtil {
                         }
 
                         @Override
+                        public String email() {
+                            return commit.getCommitterIdent().getEmailAddress();
+                        }
+
+                        @Override
                         public String comment() {
                             return commit.getFullMessage();
                         }

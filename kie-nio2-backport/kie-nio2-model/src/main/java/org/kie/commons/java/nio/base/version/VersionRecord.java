@@ -11,6 +11,8 @@ public interface VersionRecord {
 
     String author();
 
+    String email();
+
     String comment();
 
     Date date();
