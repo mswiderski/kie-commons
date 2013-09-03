@@ -38,6 +38,7 @@ import org.kie.commons.java.nio.file.FileSystemNotFoundException;
 import org.kie.commons.java.nio.file.NoSuchFileException;
 import org.kie.commons.java.nio.file.NotDirectoryException;
 import org.kie.commons.java.nio.file.OpenOption;
+import org.kie.commons.java.nio.file.Option;
 import org.kie.commons.java.nio.file.Path;
 import org.kie.commons.java.nio.file.ProviderNotFoundException;
 import org.kie.commons.java.nio.file.attribute.FileAttribute;
@@ -165,12 +166,12 @@ public class IOServiceClusterImpl implements IOService {
     }
 
     @Override
-    public void startBatch() {
+    public void startBatch( final Option... options ) {
         clusterService.lock();
     }
 
     @Override
-    public void endBatch() {
+    public void endBatch( final Option... options ) {
         clusterService.unlock();
     }
 

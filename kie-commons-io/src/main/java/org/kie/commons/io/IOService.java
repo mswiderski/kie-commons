@@ -40,6 +40,7 @@ import org.kie.commons.java.nio.file.FileSystemNotFoundException;
 import org.kie.commons.java.nio.file.NoSuchFileException;
 import org.kie.commons.java.nio.file.NotDirectoryException;
 import org.kie.commons.java.nio.file.OpenOption;
+import org.kie.commons.java.nio.file.Option;
 import org.kie.commons.java.nio.file.Path;
 import org.kie.commons.java.nio.file.ProviderNotFoundException;
 import org.kie.commons.java.nio.file.attribute.FileAttribute;
@@ -55,9 +56,9 @@ public interface IOService {
 
     void dispose();
 
-    void startBatch();
+    void startBatch( final Option... options );
 
-    void endBatch();
+    void endBatch( final Option... options );
 
     FileAttribute<?>[] convert( Map<String, ?> attrs );
 

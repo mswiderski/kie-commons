@@ -17,5 +17,5 @@
 package org.kie.commons.java.nio.file;
 
 public enum FileVisitOption {
-    FOLLOW_LINKS;
+    FOLLOW_LINKS
 }

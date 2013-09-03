@@ -21,15 +21,17 @@ import java.util.TimeZone;
 
 import org.kie.commons.java.nio.file.CopyOption;
 import org.kie.commons.java.nio.file.OpenOption;
+import org.kie.commons.java.nio.file.Option;
 
 public class CommentedOption
-        implements OpenOption,
+        implements Option,
+                   OpenOption,
                    CopyOption {
 
-    private final String   name;
-    private final String   email;
-    private final String   message;
-    private final Date     when;
+    private final String name;
+    private final String email;
+    private final String message;
+    private final Date when;
     private final TimeZone timeZone;
 
     public CommentedOption( final String name ) {

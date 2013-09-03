@@ -16,6 +16,6 @@
 
 package org.kie.commons.java.nio.file;
 
-public interface OpenOption {
+public interface OpenOption extends Option {
 
 }

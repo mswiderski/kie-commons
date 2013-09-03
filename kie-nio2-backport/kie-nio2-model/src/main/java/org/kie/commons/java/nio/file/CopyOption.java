@@ -16,5 +16,6 @@
 
 package org.kie.commons.java.nio.file;
 
-public interface CopyOption {
+public interface CopyOption extends Option {
+
 }

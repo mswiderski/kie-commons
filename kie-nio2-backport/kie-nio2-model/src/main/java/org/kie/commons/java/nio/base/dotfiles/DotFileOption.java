@@ -18,8 +18,10 @@ package org.kie.commons.java.nio.base.dotfiles;
 
 import org.kie.commons.java.nio.file.CopyOption;
 import org.kie.commons.java.nio.file.OpenOption;
+import org.kie.commons.java.nio.file.Option;
 
-public class DotFileOption implements OpenOption,
+public class DotFileOption implements Option,
+                                      OpenOption,
                                       CopyOption {
 
     @Override

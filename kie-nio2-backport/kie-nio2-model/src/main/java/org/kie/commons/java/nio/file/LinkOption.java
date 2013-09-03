@@ -16,6 +16,7 @@
 
 package org.kie.commons.java.nio.file;
 
-public enum LinkOption implements OpenOption, CopyOption {
-    NOFOLLOW_LINKS;
+public enum LinkOption implements OpenOption,
+                                  CopyOption {
+    NOFOLLOW_LINKS
 }

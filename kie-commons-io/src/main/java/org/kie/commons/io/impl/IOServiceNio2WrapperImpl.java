@@ -30,6 +30,7 @@ import org.kie.commons.java.nio.file.FileAlreadyExistsException;
 import org.kie.commons.java.nio.file.Files;
 import org.kie.commons.java.nio.file.NoSuchFileException;
 import org.kie.commons.java.nio.file.OpenOption;
+import org.kie.commons.java.nio.file.Option;
 import org.kie.commons.java.nio.file.Path;
 import org.kie.commons.java.nio.file.attribute.FileAttribute;
 import org.kie.commons.java.nio.file.attribute.FileAttributeView;
@@ -52,11 +53,11 @@ public class IOServiceNio2WrapperImpl
     }
 
     @Override
-    public void startBatch() {
+    public void startBatch( final Option... options ) {
     }
 
     @Override
-    public void endBatch() {
+    public void endBatch( final Option... options ) {
     }
 
     @Override
