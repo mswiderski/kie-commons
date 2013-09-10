@@ -82,7 +82,7 @@ public final class KObjectUtil {
 
             @Override
             public String getKey() {
-                return path.toString();
+                return path.toUri().toString();
             }
         };
     }

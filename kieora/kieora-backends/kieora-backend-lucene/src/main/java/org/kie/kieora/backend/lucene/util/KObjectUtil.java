@@ -26,13 +26,6 @@ import org.kie.kieora.model.schema.MetaType;
  */
 public final class KObjectUtil {
 
-//    private static final Set<String> KEY_FIELDS = new HashSet<String>() {{
-//        add( "id" );
-//        add( "type" );
-//        add( "key" );
-//        add( "cluster.id" );
-//    }};
-
     public static KObject toKObject( final Document document ) {
         return new KObject() {
 
