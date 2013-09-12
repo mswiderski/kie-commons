@@ -38,7 +38,6 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand;
 import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.api.MergeResult;
-import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.ConcurrentRefUpdateException;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -76,7 +75,6 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.RevWalkUtils;
 import org.eclipse.jgit.storage.file.FileRepository;
 import org.eclipse.jgit.transport.CredentialsProvider;
-import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.FileTreeIterator;
@@ -724,7 +722,9 @@ public final class JGitUtil {
                 if ( tw.getPathString().equals( gitPath ) ) {
                     if ( tw.getFileMode( 0 ).equals( FileMode.TYPE_TREE ) ) {
                         return newPair( PathType.DIRECTORY, tw.getObjectId( 0 ) );
-                    } else if ( tw.getFileMode( 0 ).equals( FileMode.TYPE_FILE ) ) {
+                    } else if ( tw.getFileMode( 0 ).equals( FileMode.TYPE_FILE ) ||
+                            tw.getFileMode( 0 ).equals( FileMode.EXECUTABLE_FILE ) ||
+                            tw.getFileMode( 0 ).equals( FileMode.REGULAR_FILE ) ) {
                         return newPair( PathType.FILE, tw.getObjectId( 0 ) );
                     }
                 }
