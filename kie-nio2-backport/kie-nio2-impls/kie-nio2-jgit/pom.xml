@@ -41,6 +41,11 @@
       <artifactId>kie-nio2-model</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+    </dependency>
+
     <!-- Core Library -->
     <dependency>
       <groupId>org.eclipse.jgit</groupId>

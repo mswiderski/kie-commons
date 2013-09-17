@@ -91,6 +91,7 @@ import org.kie.commons.java.nio.file.attribute.FileTime;
 import org.kie.commons.java.nio.fs.jgit.JGitFileSystem;
 
 import static java.util.Collections.*;
+import static org.apache.commons.io.FileUtils.*;
 import static org.eclipse.jgit.api.MergeResult.*;
 import static org.eclipse.jgit.api.MergeResult.MergeStatus.*;
 import static org.eclipse.jgit.lib.Constants.*;
@@ -226,6 +227,11 @@ public final class JGitUtil {
 
             return git;
         } catch ( final Exception ex ) {
+            try {
+                forceDelete( repoFolder );
+            } catch ( final java.io.IOException e ) {
+                throw new RuntimeException( e );
+            }
             throw new RuntimeException( ex );
         }
     }
