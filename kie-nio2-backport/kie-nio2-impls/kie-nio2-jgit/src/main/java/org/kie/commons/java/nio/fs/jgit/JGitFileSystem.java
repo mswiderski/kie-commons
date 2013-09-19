@@ -32,8 +32,18 @@ import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.kie.commons.java.nio.IOException;
 import org.kie.commons.java.nio.base.FileSystemId;
-import org.kie.commons.java.nio.file.*;
+import org.kie.commons.java.nio.file.ClosedWatchServiceException;
+import org.kie.commons.java.nio.file.FileStore;
+import org.kie.commons.java.nio.file.FileSystem;
 import org.kie.commons.java.nio.file.InterruptedException;
+import org.kie.commons.java.nio.file.InvalidPathException;
+import org.kie.commons.java.nio.file.Path;
+import org.kie.commons.java.nio.file.PathMatcher;
+import org.kie.commons.java.nio.file.PatternSyntaxException;
+import org.kie.commons.java.nio.file.WatchEvent;
+import org.kie.commons.java.nio.file.WatchKey;
+import org.kie.commons.java.nio.file.WatchService;
+import org.kie.commons.java.nio.file.Watchable;
 import org.kie.commons.java.nio.file.attribute.UserPrincipalLookupService;
 import org.kie.commons.java.nio.file.spi.FileSystemProvider;
 
@@ -279,7 +289,9 @@ public class JGitFileSystem implements FileSystem,
 
     @Override
     public void close() throws IOException {
-        checkClose();
+        if ( isClose ) {
+            return;
+        }
         gitRepo.getRepository().close();
         isClose = true;
         provider.onCloseFileSystem( this );
