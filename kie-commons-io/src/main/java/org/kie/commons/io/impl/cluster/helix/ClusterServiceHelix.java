@@ -53,6 +53,13 @@ public class ClusterServiceHelix implements ClusterService {
         }
     }
 
+    @Override
+    public void dispose() {
+        if (this.participantManager != null) {
+            this.participantManager.disconnect();
+        }
+    }
+
     private void enablePartition() {
         participantManager.getClusterManagmentTool().enablePartition( true, clusterName, instanceName, resourceName, asList( resourceName + "_0" ) );
     }

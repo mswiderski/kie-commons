@@ -162,6 +162,7 @@ public class IOServiceClusterImpl implements IOService {
 
     @Override
     public void dispose() {
+        clusterService.dispose();
         service.dispose();
     }
 
